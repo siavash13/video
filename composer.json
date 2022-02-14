@@ -1,0 +1,41 @@
+{
+    "name": "codenidus/video-conference",
+    "description": ":package_description",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Author Name",
+            "email": "author@email.com",
+            "homepage": "http://author.com"
+        }
+    ],
+    "homepage": "https://github.com/codenidus/video-conference",
+    "keywords": ["Laravel", "VideoConference"],
+    "require": {
+        "illuminate/support": "~9|~8|~6|~5"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~9.0",
+        "orchestra/testbench": "~6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Codenidus\\VideoConference\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Codenidus\\VideoConference\\Tests\\": "tests"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Codenidus\\VideoConference\\VideoConferenceServiceProvider"
+            ],
+            "aliases": {
+                "VideoConference": "Codenidus\\VideoConference\\Facades\\VideoConference"
+            }
+        }
+    }
+}
