@@ -2,6 +2,7 @@
 
 namespace tests;
 
+use Codenidus\VideoConference\VideoConferenceServiceProvider;
 use Orchestra\Testbench\TestCase;
 
 class VideoConferenceTest extends TestCase
