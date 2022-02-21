@@ -2,7 +2,6 @@
 
 namespace Codenidus\VideoConference;
 
-use Illuminate\Support\ServiceProvider;
 
 class VideoConferenceServiceProvider extends ServiceProvider
 {

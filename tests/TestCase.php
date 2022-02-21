@@ -2,10 +2,17 @@
 
 namespace tests;
 
+use Orchestra\Testbench\TestCase;
 use Codenidus\VideoConference\VideoConferenceServiceProvider;
 
-class TestCase extends Orchestra\Testbench\TestCase
+class BaseTestCase extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withFactories(__DIR__.'/../database/factories');
+    }
+
     public function getPackageProviders($app)
     {
         return [
