@@ -13,11 +13,13 @@ class CreateRoomTable extends Migration
      */
     public function up()
     {
-        Schema::create('room', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('room')) {
+            Schema::create('room', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->timestamps();
+            });
+        }
     }
 
     /**
