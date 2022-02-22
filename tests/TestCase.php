@@ -4,13 +4,14 @@ namespace tests;
 
 use Orchestra\Testbench\TestCase;
 use Codenidus\VideoConference\VideoConferenceServiceProvider;
+use Illuminate\Support\Facades\Schema;
 
 class BaseTestCase extends TestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
-        $this->withFactories(__DIR__.'/../database/factories');
+//        $this->withFactories(__DIR__.'/../database/factories');
     }
 
     public function getPackageProviders($app)
@@ -27,6 +28,8 @@ class BaseTestCase extends TestCase
             'driver' => 'sqlite',
             'database' => ':memory:',
         ]);
+        include_once __DIR__ . '/../database/migrations/2022_02_19_214914_create_room_table.php';
 
+        (new \CreateRoomTable)->up();
     }
 }

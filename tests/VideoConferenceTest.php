@@ -4,9 +4,11 @@ namespace tests;
 
 use Codenidus\VideoConference\Room;
 use Codenidus\VideoConference\VideoConferenceServiceProvider;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class VideoConferenceTest extends BaseTestCase
 {
+    use RefreshDatabase;
     /** @test  */
     public function it_is_working(){
         $this->assertEquals(2, 2);

@@ -21,7 +21,7 @@
     "autoload": {
         "psr-4": {
             "Codenidus\\VideoConference\\": "src/",
-            "Database\\Factories\\": "database\\factories"
+            "Database\\Factories\\Codenidus\\VideoConference\\": "database/factories/"
         }
     },
     "autoload-dev": {

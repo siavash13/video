@@ -3,9 +3,13 @@
 namespace Codenidus\VideoConference;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Room extends Model
 {
-    protected $guarded = ['name'];
+    use HasFactory;
 
+    protected $table = "room";
+
+    protected $guarded = ['name'];
 }
