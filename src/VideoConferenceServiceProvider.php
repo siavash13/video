@@ -42,6 +42,9 @@ class VideoConferenceServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/video-conference.php', 'video-conference');
 
+        $this->commands([
+            Console\ProcessCommand::class
+        ]);
         // Register the service the package provides.
         $this->app->singleton('video-conference', function ($app) {
             return new VideoConference;
