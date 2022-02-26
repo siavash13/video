@@ -11,4 +11,9 @@ class ProcessCommand extends Command
     protected $signature = 'videoconference:publish';
 
     protected $description = 'Publish Video Conference';
+
+    public function handle()
+    {
+        (new \CreateRoomTable)->up();
+    }
 }
