@@ -12,7 +12,7 @@ class ProcessCommand extends Command
 
     public function handle()
     {
-        include_once __DIR__ . '/../database/migrations/2022_02_19_214914_create_room_table.php';
+        include_once __DIR__ . '../../database/migrations/2022_02_19_214914_create_room_table.php';
 
         (new \CreateRoomTable)->up();
     }
