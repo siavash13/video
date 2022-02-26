@@ -22,6 +22,7 @@ class VideoConferenceServiceProvider extends ServiceProvider
 
         // Publishing is only necessary when using the CLI.
         if ($this->app->runningInConsole()) {
+            dd('ever here');
             $this->bootForConsole();
         }
 
