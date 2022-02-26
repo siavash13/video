@@ -4,7 +4,6 @@ namespace tests;
 
 use Orchestra\Testbench\TestCase;
 use Codenidus\VideoConference\VideoConferenceServiceProvider;
-use Illuminate\Support\Facades\Schema;
 
 class BaseTestCase extends TestCase
 {
