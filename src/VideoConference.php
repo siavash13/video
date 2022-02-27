@@ -9,4 +9,8 @@ class VideoConference
     {
         return 'it works!';
     }
+
+    public static function configNotPublished(){
+        return is_null(config('video-conference'));
+    }
 }
