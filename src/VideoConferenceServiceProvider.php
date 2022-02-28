@@ -105,4 +105,11 @@ class VideoConferenceServiceProvider extends ServiceProvider
         // Registering package commands.
         // $this->commands([]);
     }
+
+    protected function routeConfiguration()
+    {
+        return [
+            'prefix' => config('video-conference.prefix'),
+        ];
+    }
 }

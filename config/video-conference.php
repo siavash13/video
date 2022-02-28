@@ -1,5 +1,6 @@
 <?php
 
 return [
-    'path' => 'rooms'
+    'path' => 'rooms',
+    'prefix' => 'videoconference'
 ];
