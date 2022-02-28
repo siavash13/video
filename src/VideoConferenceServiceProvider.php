@@ -3,7 +3,7 @@
 namespace Codenidus\VideoConference;
 
 use Illuminate\Support\ServiceProvider;
-use Symfony\Component\Routing\Route;
+use Illuminate\Support\Facades\Route;
 
 class VideoConferenceServiceProvider extends ServiceProvider
 {
