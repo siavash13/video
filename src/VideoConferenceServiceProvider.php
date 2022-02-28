@@ -3,6 +3,7 @@
 namespace Codenidus\VideoConference;
 
 use Illuminate\Support\ServiceProvider;
+use Symfony\Component\Routing\Route;
 
 class VideoConferenceServiceProvider extends ServiceProvider
 {
@@ -20,6 +21,8 @@ class VideoConferenceServiceProvider extends ServiceProvider
 
         $this->registerResources();
 
+        $this->registerRoutes();
+
         // Publishing is only necessary when using the CLI.
         if ($this->app->runningInConsole()) {
             $this->bootForConsole();
@@ -31,8 +34,15 @@ class VideoConferenceServiceProvider extends ServiceProvider
     public function registerResources()
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-//        $this->loadViewsFrom(__DIR__.'/../resources/views', 'videoconference');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'videoconference');
 
+    }
+
+    public function registerRoutes()
+    {
+        Route::group([], function () {
+           $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        });
     }
 
     /**
