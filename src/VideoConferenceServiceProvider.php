@@ -31,9 +31,8 @@ class VideoConferenceServiceProvider extends ServiceProvider
     public function registerResources()
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'videoconference');
+//        $this->loadViewsFrom(__DIR__.'/../resources/views', 'videoconference');
 
-        $this->registerResources();
     }
 
     /**
@@ -80,6 +79,8 @@ class VideoConferenceServiceProvider extends ServiceProvider
         /*$this->publishes([
             __DIR__.'/../resources/views' => base_path('resources/views/vendor/codenidus'),
         ], 'video-conference.views');*/
+
+        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
         // Publishing assets.
         /*$this->publishes([
