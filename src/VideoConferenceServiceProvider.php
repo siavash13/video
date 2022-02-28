@@ -40,7 +40,7 @@ class VideoConferenceServiceProvider extends ServiceProvider
 
     public function registerRoutes()
     {
-        Route::group([], function () {
+        Route::group($this->routeConfiguration, function () {
            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         });
     }
