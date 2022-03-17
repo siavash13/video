@@ -2,7 +2,7 @@
 
 namespace Codenidus\VideoConference\Console;
 
-use Codenidus\VideoConference\VideoConference;
+use Codenidus\VideoConference\Facades\VideoConference;
 use Illuminate\Console\Command;
 
 class ProcessCommand extends Command

@@ -5,12 +5,12 @@ namespace Codenidus\VideoConference;
 class VideoConference
 {
     // Build wonderful things
-    public static function test()
+    public function test()
     {
         return 'it works!';
     }
 
-    public static function configNotPublished(){
+    public function configNotPublished(){
         return is_null(config('video-conference'));
     }
 }

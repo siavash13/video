@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use Codenidus\VideoConference\Facades\VideoConference;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return \Codenidus\VideoConference\VideoConference::test();
+    return VideoConference::test();
 });
 
 Route::get('/room', function () {

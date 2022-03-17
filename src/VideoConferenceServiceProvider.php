@@ -4,6 +4,7 @@ namespace Codenidus\VideoConference;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Codenidus\VideoConference\Facades\VideoConference;
 
 class VideoConferenceServiceProvider extends ServiceProvider
 {
@@ -20,7 +21,6 @@ class VideoConferenceServiceProvider extends ServiceProvider
         // $this->loadRoutesFrom(__DIR__.'/routes.php');
 
         $this->registerResources();
-
         $this->registerRoutes();
 
         // Publishing is only necessary when using the CLI.
@@ -41,11 +41,6 @@ class VideoConferenceServiceProvider extends ServiceProvider
         Route::group($this->routeConfiguration(), function () {
            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         });
-    }
-
-    public function registerFacades()
-    {
-
     }
 
     /**
