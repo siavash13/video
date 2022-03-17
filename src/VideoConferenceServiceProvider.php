@@ -27,8 +27,6 @@ class VideoConferenceServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->bootForConsole();
         }
-
-
     }
 
     public function registerResources()
@@ -43,6 +41,11 @@ class VideoConferenceServiceProvider extends ServiceProvider
         Route::group($this->routeConfiguration(), function () {
            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         });
+    }
+
+    public function registerFacades()
+    {
+
     }
 
     /**
