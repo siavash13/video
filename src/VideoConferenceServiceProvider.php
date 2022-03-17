@@ -4,7 +4,7 @@ namespace Codenidus\VideoConference;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
-use Codenidus\VideoConference\Facades\VideoConference;
+use Codenidus\VideoConference\VideoConference;
 
 class VideoConferenceServiceProvider extends ServiceProvider
 {
