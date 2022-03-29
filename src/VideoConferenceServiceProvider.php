@@ -15,13 +15,10 @@ class VideoConferenceServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'codenidus');
-        // $this->loadViewsFrom(__DIR__.'/../resources/views', 'codenidus');
-        // $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-        // $this->loadRoutesFrom(__DIR__.'/routes.php');
-
-        $this->registerResources();
         $this->registerRoutes();
+        $this->registerResources();
+        $this->registerVueAssetsPublish();
+        $this->registerConfigFilePublish();
 
         // Publishing is only necessary when using the CLI.
         if ($this->app->runningInConsole()) {
@@ -33,7 +30,25 @@ class VideoConferenceServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'videoconference');
+    }
 
+    public function registerVueAssetsPublish()
+    {
+        $this->publishes([
+            __DIR__.'/../resources/js/app-video-conference.js' => resource_path('js/app-video-conference.js'),
+            __DIR__.'/../resources/js/App-video-conference.vue' => resource_path('js/App-video-conference.vue'),
+            __DIR__.'/../resources/js/components/webrtc/VideoConference.vue' => resource_path('js/components/webrtc/VideoConference.vue'),
+            __DIR__.'/../resources/js/configs/socket.js' => resource_path('js/configs/socket.js'),
+            __DIR__.'/../resources/js/utils/socket/Socket.js' => resource_path('js/utils/socket/Socket.js'),
+            __DIR__.'/../resources/js/utils/socket/webRtcSocket.js' => resource_path('js/utils/socket/webRtcSocket.js'),
+        ], 'videoconference-vue');
+    }
+
+    public function registerConfigFilePublish()
+    {
+      $this->publishes([
+        __DIR__.'/../config/video-conference.php' => config_path('video-conference.php'),
+      ], 'videoconference-config');
     }
 
     public function registerRoutes()
@@ -78,11 +93,6 @@ class VideoConferenceServiceProvider extends ServiceProvider
      */
     protected function bootForConsole(): void
     {
-        // Publishing the configuration file.
-        $this->publishes([
-            __DIR__.'/../config/video-conference.php' => config_path('video-conference.php'),
-        ], 'video-conference.config');
-
         // Publishing the views.
         /*$this->publishes([
             __DIR__.'/../resources/views' => base_path('resources/views/vendor/codenidus'),

@@ -21,4 +21,9 @@ Route::get('/room', function () {
    return view('videoconference::room');
 });
 
+Route::get('spa', function () {
+  return view('videoconference::spa');
+});
+
+
 Route::resource('/rooms', \Codenidus\VideoConference\Http\Controllers\RoomController::class);
