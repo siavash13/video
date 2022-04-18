@@ -7,6 +7,7 @@
 
 <script>
 import VideoConference from "./components/webrtc/VideoConference";
+import {inject} from "vue";
 
 export default {
   components: {

@@ -11,13 +11,11 @@ class SocketIO
   }
 
   async initial(options) {
-    const socket = socketio(options.port, {
+    this.socket = socketio(options.port, {
       withCredentials: true,
       autoConnect: false,
       transports: ['websocket'],
     });
-
-    this.socket = socket;
   }
 
   listen(event_name, callback) {
