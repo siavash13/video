@@ -42,6 +42,6 @@ class ProcessCommand extends Command
 
     protected function writeCommentOnScreen()
     {
-      $this->warn('Please install dependencies packages by running \'npm install vue vue-loader peerjs socketio@^4.1.2\' ');
+      $this->warn('Please install dependencies packages by running \'npm install vue vue-loader peerjs socket.io-client@^4.1.2\' ');
     }
 }
