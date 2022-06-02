@@ -32,8 +32,7 @@ export default {
     }
   },
   methods: {
-    connect() {
-
+    async connect() {
 
       if (!this.webrtc.socket.connected) {
         this.webrtc.connection({
@@ -41,23 +40,20 @@ export default {
           token: socketConfig.webrtc_app_secret
         });
 
-
         this.webrtc.socket.on("connect", () => {
           console.log('connected!');
         });
       }
-
-
     },
     async initialize() {
-      if (!this.webrtc.socket) {
-        return;
-      }
+        if (!this.webrtc.socket) {
+          return;
+        }
+        await this.connect();
 
-
-      this.myPeer = new PeerJS(undefined, {
-        host: socketConfig.host,
-        port: socketConfig.port,
+        this.myPeer = new PeerJS(undefined, {
+        host: socketConfig.peer_host,
+        port: socketConfig.peer_port,
       });
 
       try {
