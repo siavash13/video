@@ -1,11 +1,11 @@
 import socketio from 'socket.io-client';
-import PeerJS from 'peerjs';
+import peerjs from '../peerjs/PeerJs';
 
 class SocketIO
 {
   constructor() {
     this.socket = null;
-    this.PeerJS = PeerJS;
+    this.peerJS = new peerjs();
     this.events = [];
     this.initialized = false;
   }

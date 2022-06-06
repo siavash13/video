@@ -7,7 +7,6 @@
 </template>
 
 <script>
-import PeerJS from "peerjs";
 import {inject} from "vue";
 import socketConfig from "../../configs/socket";
 
@@ -20,15 +19,12 @@ export default {
       webrtc
     }
   },
-  created() {
+  async created() {
     this.initialize();
   },
   data() {
     return {
-      myPeer: Object,
-      peerConfig: {
-        room: "room3",
-      }
+      //
     }
   },
   methods: {
@@ -46,20 +42,20 @@ export default {
       }
     },
     async initialize() {
-        if (!this.webrtc.socket) {
-          return;
-        }
-        await this.connect();
+      if (!this.webrtc.socket) {
+        return;
+      }
 
-        this.myPeer = new PeerJS(undefined, {
-        host: socketConfig.peer_host,
-        port: socketConfig.peer_port,
-      });
+      if (!this.getRoomId()) {
+        console.log('Video Conference room is not specified! Please set room name in url with room query');
+      }
+
+      await this.connect();
 
       try {
-        const thisUserId = await this.peerOpen();
+        const thisUserId = await this.webrtc.peerJS.open();
 
-        this.myPeer.on('call', call => {
+        this.webrtc.peerJS.videoPeer.on('call', call => {
           call.answer(stream);
 
           call.on('stream', peerVideoStream => {
@@ -75,9 +71,10 @@ export default {
           this.connectToNewUser(peerUserId, stream);
         });
 
-        this.webrtc.joinRoom(this.peerConfig.room, thisUserId);
-
-        this.addVideoStream(this.$refs.video, stream);
+        if (!!!this.getRoomId()) {
+          this.webrtc.joinRoom(this.getRoomId(), thisUserId);
+          this.addVideoStream(this.$refs.video, stream);
+        }
 
       } catch (error) {
         console.log('webrtc initialize error:');
@@ -108,16 +105,8 @@ export default {
         });
       });
     },
-    async peerOpen() {
-      return new Promise((resolve, reject) => {
-        this.myPeer.on('open', (id) => {
-          resolve(id);
-          return;
-        });
-      });
-    },
     connectToNewUser(peerUserId, stream) {
-      const call = this.myPeer.call(peerUserId, stream);
+      const call = this.websocket.peerJS.videoPeer.call(peerUserId, stream);
       call.on('stream', peerVideoStream => {
         this.addVideoStream(this.$refs.peer, peerVideoStream);
       });
@@ -132,6 +121,13 @@ export default {
         video.play();
       });
     },
+    getRoomId() {
+      let params = new Proxy(new URLSearchParams(window.location.search), {
+        get: (searchParams, prop) => searchParams.get(prop),
+      });
+
+      return params.room;
+    }
   }
 }
 </script>
