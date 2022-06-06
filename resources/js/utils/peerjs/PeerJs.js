@@ -1,6 +1,5 @@
 import PeerJS from 'peerjs';
 import socketConfig from "../../configs/socket";
-import SocketIO from "../socket/Socket";
 
 
 class VideoPeer
@@ -10,10 +9,6 @@ class VideoPeer
       host: socketConfig.peer_host,
       port: socketConfig.peer_port,
     });
-  }
-
-  async initial(options) {
-
   }
 
   async open() {
