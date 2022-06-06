@@ -71,7 +71,7 @@ export default {
           this.connectToNewUser(peerUserId, stream);
         });
 
-        if (!!!this.getRoomId()) {
+        if (!!this.getRoomId()) {
           this.webrtc.joinRoom(this.getRoomId(), thisUserId);
           this.addVideoStream(this.$refs.video, stream);
         }
