@@ -40,6 +40,14 @@ class ProcessCommand extends Command
         }
     }
 
+    protected function publishMiddlewareFile()
+    {
+        if (!file_exists(app_path('Http/Middleware/VideoConferenceAuthorize.php'))) {
+            $this->info('Create Video Conference Middleware...');
+            $this->callSilent('vendor:publish', ['--tag' => 'videoconference-middleware']);
+        }
+    }
+
     protected function writeCommentOnScreen()
     {
       $this->warn('Please install dependencies packages by running \'npm install vue vue-loader peerjs socket.io-client@^4.1.2\' ');

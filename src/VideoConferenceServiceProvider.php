@@ -2,9 +2,13 @@
 
 namespace Codenidus\VideoConference;
 
+use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Contracts\Http\Kernel;
 use Codenidus\VideoConference\VideoConference;
+use Codenidus\VideoConference\Http\Middleware\BaseVideoConferenceAuthorize;
+
 
 class VideoConferenceServiceProvider extends ServiceProvider
 {
@@ -13,12 +17,17 @@ class VideoConferenceServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot(): void
+    public function boot(Kernel $kernel): void
     {
+        // set middleware in router
+        $router = $this->app->make(Router::class);
+        $router->aliasMiddleware('videoconferenceAuthorize', BaseVideoConferenceAuthorize::class);
+
         $this->registerRoutes();
         $this->registerResources();
         $this->registerVueAssetsPublish();
         $this->registerConfigFilePublish();
+        $this->registerMiddlewareFilePublish();
 
         // Publishing is only necessary when using the CLI.
         if ($this->app->runningInConsole()) {
@@ -51,10 +60,22 @@ class VideoConferenceServiceProvider extends ServiceProvider
       ], 'videoconference-config');
     }
 
+    public function registerMiddlewareFilePublish()
+    {
+        $this->publishes([
+            __DIR__.'/Http/Middleware/VideoConferenceAuthorize.php' => app_path('Http/Middleware/VideoConferenceAuthorize.php'),
+        ], 'videoconference-middleware');
+    }
+
     public function registerRoutes()
     {
-        Route::group($this->routeConfiguration(), function () {
+        Route::group($this->webRouteConfiguration(), function () {
            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        });
+
+
+        Route::group($this->apiRouteConfiguration(), function () {
+            $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
         });
     }
 
@@ -70,6 +91,7 @@ class VideoConferenceServiceProvider extends ServiceProvider
         $this->commands([
             Console\ProcessCommand::class
         ]);
+
         // Register the service the package provides.
         $this->app->singleton('video-conference', function ($app) {
             return new VideoConference;
@@ -93,31 +115,30 @@ class VideoConferenceServiceProvider extends ServiceProvider
      */
     protected function bootForConsole(): void
     {
-        // Publishing the views.
-        /*$this->publishes([
-            __DIR__.'/../resources/views' => base_path('resources/views/vendor/codenidus'),
-        ], 'video-conference.views');*/
 
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
-        // Publishing assets.
-        /*$this->publishes([
-            __DIR__.'/../resources/assets' => public_path('vendor/codenidus'),
-        ], 'video-conference.views');*/
-
-        // Publishing the translation files.
-        /*$this->publishes([
-            __DIR__.'/../resources/lang' => resource_path('lang/vendor/codenidus'),
-        ], 'video-conference.views');*/
-
-        // Registering package commands.
-        // $this->commands([]);
     }
 
-    protected function routeConfiguration()
+    protected function webRouteConfiguration()
     {
+        $middlewareList = array_merge( ['web', 'videoconferenceAuthorize'],
+            config('video-conference.routes.api.middleware', []));
+
         return [
             'prefix' => config('video-conference.prefix'),
+            'middleware' => $middlewareList,
+        ];
+    }
+
+    protected function apiRouteConfiguration()
+    {
+        $middlewareList = array_merge( ['api', 'auth:sanctum', 'videoconferenceAuthorize'],
+            config('video-conference.routes.api.middleware', []));
+
+        return [
+            'prefix' => 'api/'. config('video-conference.prefix'),
+            'middleware' => $middlewareList,
         ];
     }
 }
