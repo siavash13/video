@@ -4,16 +4,22 @@
 namespace Codenidus\VideoConference\Http\Controllers;
 
 
-use Codenidus\VideoConference\Http\Requests\UserTokenIndexRequest;
+use Illuminate\Support\Facades\Auth;
 use Codenidus\VideoConference\Http\Resources\UserTokenResource;
 
 class UserTokenController
 {
-    public function index(UserTokenIndexRequest $request)
+    public function index()
     {
+        $user   = Auth::user();
         $client = new \GuzzleHttp\Client();
 
         $url = config('video-conference.app_url') . '/api/connected/user-check';
+        $username = $user->{config('video-conference.user.username_field', 'email')} ?? null;
+
+        if($username == null) {
+            abort(403, 'The user unique field is invalid.');
+        }
 
         $response = $client->request('GET', $url, [
             'headers' => [
@@ -21,7 +27,7 @@ class UserTokenController
                 'app-secret' => config('video-conference.app_secret'),
             ],
             'query' => [
-                'username' => $request->username,
+                'username' => $username,
                 'register' => 'true',
             ],
         ]);
