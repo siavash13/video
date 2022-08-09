@@ -1,6 +1,5 @@
 <template>
   <div>
-    <div @click="connect">Click</div>
     <video id="video-content" ref="video"></video>
     <video id="peer-content" ref="peer"></video>
   </div>
@@ -12,6 +11,7 @@ import socketConfig from "../../configs/socket";
 
 export default {
   name: "VideoConference",
+  props: ['user', 'room'],
   setup() {
     const webrtc = inject('webrtc');
 
@@ -20,7 +20,7 @@ export default {
     }
   },
   async created() {
-    this.initialize();
+
   },
   data() {
     return {
@@ -29,11 +29,9 @@ export default {
   },
   methods: {
     async connect() {
-
       if (!this.webrtc.socket.connected) {
         this.webrtc.connection({
-          id: socketConfig.webrtc_app_id,
-          token: socketConfig.webrtc_app_secret
+          token: this.user.token
         });
 
         this.webrtc.socket.on("connect", () => {
@@ -46,8 +44,14 @@ export default {
         return;
       }
 
-      if (!this.getRoomId()) {
-        console.log('Video Conference room is not specified! Please set room name in url with room query');
+      if(!this.user) {
+        console.log('Connection is not established with server.');
+        return;
+      }
+
+      if(!this.room) {
+        console.log('Please set the room id for joining.');
+        return;
       }
 
       await this.connect();
@@ -71,10 +75,8 @@ export default {
           this.connectToNewUser(peerUserId, stream);
         });
 
-        if (!!this.getRoomId()) {
-          this.webrtc.joinRoom(this.getRoomId(), thisUserId);
-          this.addVideoStream(this.$refs.video, stream);
-        }
+        this.webrtc.joinRoom(this.room, thisUserId);
+        this.addVideoStream(this.$refs.video, stream);
 
       } catch (error) {
         console.log('webrtc initialize error:');
@@ -121,13 +123,6 @@ export default {
         video.play();
       });
     },
-    getRoomId() {
-      let params = new Proxy(new URLSearchParams(window.location.search), {
-        get: (searchParams, prop) => searchParams.get(prop),
-      });
-
-      return params.room;
-    }
   }
 }
 </script>

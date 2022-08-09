@@ -1,8 +1,7 @@
 <template>
   <div>
     <p>Video Conference Test</p>
-    <VideoConference/>
-    <Rooms />
+    <Rooms/>
   </div>
 </template>
 
@@ -14,8 +13,10 @@ import {inject} from "vue";
 export default {
   components: {
     Rooms,
-    VideoConference,
   }
 }
 </script>
 
+<style lang="scss">
+
+</style>

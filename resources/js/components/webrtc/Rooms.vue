@@ -1,61 +1,78 @@
 <template>
-  <div>
-    <form ref="form" @submit="createRoom">
-      <label>Room Name:</label>
-      <input type="text" v-model="room.name" />
-      <label>Moderator:</label>
-      <input type="text" v-model="room.moderator" />
-      <label>Start Time:</label>
-      <input type="text" v-model="room.start_time" />
-      <label>End Time:</label>
-      <input type="text" v-model="room.end_time" />
+  <div id="room-section">
+    <div v-if="!!user">
+      <RoomCreate
+        :user="user"
+      />
 
-      <br />
-
-      <input type="submit" value="Create Room" />
-    </form>
-
-    <div v-if="message.status" :style="{ color:message.color }">
-      {{ message.text }}
+      <RoomJoin
+        :user="user"
+      />
+    </div>
+    <div v-else-if="!error">
+      <h2>Please Wait{{ waitingDots }}</h2>
+      <p>Connecting to the server to get a user authorization token.</p>
+    </div>
+    <div v-else class="error">
+      {{ this.error }}
     </div>
   </div>
 </template>
 
 <script>
-import socketConfig from "../../configs/socket";
+import RoomJoin from "./RoomJoin";
+import RoomCreate from "./RoomCreate";
 
 export default {
   name: "Rooms",
+  created() {
+    this.getUserAccessToken();
+  },
   data() {
     return {
-      room: {
-        name: '',
-        moderator: 'moderator',
-        start_time: null,
-        end_time: null,
-      },
-      message: {
-        status: false,
-        text: '',
-        color: 'green'
-      }
+      user: null,
+      waitingDots: '.',
+      interval: null,
+      error: null,
     }
   },
   methods: {
-    createRoom() {
-      this.message.status = false;
-      const url = socketConfig.webrtc_url + '/rooms'
+    getUserAccessToken() {
+      this.interval = setInterval(this.setWaitingDots, 500);
 
-      axios.post(url, this.room).then(response => {
-        this.message.color = 'green';
-        this.message.text = 'Room created successfully! Room Id is: ' + response.data.data.id;
+      axios.get('/api/videoconference/userToken').then(response => {
+        this.user = response.data.data;
       }, error => {
-        this.message.color = 'red';
-        this.message.text = 'Error happened! ' + error.message;
+        this.error = 'Error happened! ' + error.response.data.message;
       }).finally(() => {
-        this.message.status = true;
+        clearInterval(this.interval);
       });
     },
+    setWaitingDots() {
+      if(this.waitingDots.length < 3) {
+        this.waitingDots = this.waitingDots.concat('.');
+      } else {
+        this.waitingDots = '';
+      }
+    }
+  },
+  beforeDestroy() {
+    clearInterval(this.interval);
+  },
+  components: {
+    RoomCreate,
+    RoomJoin,
   },
 }
 </script>
+
+<style lang="scss">
+  #room-section {
+    margin-top: 100px;
+    text-align: center;
+
+    .error {
+      color: red;
+    }
+  }
+</style>

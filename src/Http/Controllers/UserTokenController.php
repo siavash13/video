@@ -21,16 +21,20 @@ class UserTokenController
             abort(403, 'The user unique field is invalid.');
         }
 
-        $response = $client->request('GET', $url, [
-            'headers' => [
-                'app-id' => config('video-conference.app_id'),
-                'app-secret' => config('video-conference.app_secret'),
-            ],
-            'query' => [
-                'username' => $username,
-                'register' => 'true',
-            ],
-        ]);
+        try {
+            $response = $client->request('GET', $url, [
+                'headers' => [
+                    'app-id' => config('video-conference.app_id'),
+                    'app-secret' => config('video-conference.app_secret'),
+                ],
+                'query' => [
+                    'username' => $username,
+                    'register' => 'true',
+                ],
+            ]);
+        } catch(error) {
+            abort(500, 'Failed to connect to server.');
+        }
 
         $info = json_decode($response->getBody());
 

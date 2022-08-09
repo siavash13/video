@@ -33,7 +33,7 @@ class SocketIO
 
   connection(data, status = true) {
     this.socket.io.opts.query = {
-      "user-id": data.id,
+      "user-id": data.id || null,
       "user-token": data.token
     };
 

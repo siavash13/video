@@ -15,6 +15,7 @@ class ProcessCommand extends Command
     {
         $this->publishConfigFile();
         $this->createDatabaseTable();
+        $this->publishMiddlewareFile();
         $this->publishVueAssets();
         $this->writeCommentOnScreen();
     }
