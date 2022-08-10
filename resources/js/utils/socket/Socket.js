@@ -5,7 +5,7 @@ class SocketIO
 {
   constructor() {
     this.socket = null;
-    this.peerJS = new peerjs();
+    this.peerJS = null;
     this.events = [];
     this.initialized = false;
   }
@@ -16,6 +16,10 @@ class SocketIO
       autoConnect: false,
       transports: ['websocket'],
     });
+  }
+
+  connectPeerJs() {
+    this.peerJS = new peerjs();
   }
 
   listen(event_name, callback) {

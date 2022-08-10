@@ -56,6 +56,8 @@ export default {
 
       await this.connect();
 
+      this.webrtc.connectPeerJs();
+
       try {
         const thisUserId = await this.webrtc.peerJS.open();
 
