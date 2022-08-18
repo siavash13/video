@@ -32,7 +32,7 @@ class UserTokenController
                     'register' => 'true',
                 ],
             ]);
-        } catch(error) {
+        } catch(\Exception $error) {
             abort(500, 'Failed to connect to server.');
         }
 
