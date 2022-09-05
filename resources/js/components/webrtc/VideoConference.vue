@@ -1,30 +1,46 @@
 <template>
-  <div>
-    <video id="video-content" ref="video"></video>
-    <video id="peer-content" ref="peer"></video>
+  <div id="video-conference">
+    <div v-show="!roomIsValid" style="color:red;">
+      The desired room was not found! Please try to connect to an available room.
+      <a href="#" @click.prevent="leftTheRoom()">Back</a>
+    </div>
+    <div class="box" v-show="roomIsValid">
+      <div>
+        <a href="#" @click.prevent="leftTheRoom">Left Room</a>
+        <a href="#" @click.prevent="controlAudio">1</a>
+      </div>
+      <video id="video-content" class="video-item" ref="video"></video>
+    </div>
+    <div
+      class="box"
+      v-show="roomIsValid"
+      v-for="(connection, index) in connections"
+      :key="'connection_' + index"
+    >
+      <video v-show="connection.active" id="peer-content" class="video-item" ref="peer"></video>
+    </div>
   </div>
 </template>
 
 <script>
-import {inject} from "vue";
-import socketConfig from "../../configs/socket";
+import { inject } from "vue";
 
 export default {
   name: "VideoConference",
-  props: ['user', 'room'],
+  props: ['user'],
   setup() {
     const webrtc = inject('webrtc');
 
     return {
-      webrtc
+      webrtc,
     }
-  },
-  async created() {
-
   },
   data() {
     return {
-      //
+      room: null,
+      roomIsValid: true,
+      connections: [],
+      audioStatus: true,
     }
   },
   methods: {
@@ -35,11 +51,16 @@ export default {
         });
 
         this.webrtc.socket.on("connect", () => {
-          console.log('connected!');
+          console.log('socket connected!');
         });
       }
     },
-    async initialize() {
+    async initialize(room = null) {
+      this.room = room;
+      this.audioStatus = true;
+      this.roomIsValid = true;
+      this.connections = [];
+
       if (!this.webrtc.socket) {
         return;
       }
@@ -56,75 +77,70 @@ export default {
 
       await this.connect();
 
-      this.webrtc.connectPeerJs();
+      this.webrtc.setup({
+        refs: this.$refs,
+        videoRef: 'video',
+        peerRef:  'peer',
+        connections: this.connections,
+        joinRoom: this.userJoinRoom,
+        leftRoom: this.userLeftRoom,
+        invalidRoom: this.invalidRoom,
+      });
 
       try {
-        const thisUserId = await this.webrtc.peerJS.open();
-
-        this.webrtc.peerJS.videoPeer.on('call', call => {
-          call.answer(stream);
-
-          call.on('stream', peerVideoStream => {
-            console.log('Ever this event happend')
-            this.addVideoStream(this.$refs.peer, peerVideoStream);
-          });
-        });
-
-        const stream = await this.browserMedia();
-
-        this.webrtc.socket.on('user-connected', peerUserId => {
-          console.log('peerUserId is', peerUserId);
-          this.connectToNewUser(peerUserId, stream);
-        });
-
-        this.webrtc.joinRoom(this.room, thisUserId);
-        this.addVideoStream(this.$refs.video, stream);
-
+        await this.webrtc.initialPeerJs();
+        this.webrtc.joinRoom(this.room.id);
       } catch (error) {
         console.log('webrtc initialize error:');
         console.log(error);
       }
     },
-    async browserMedia() {
-      return new Promise((resolve, reject) => {
-        navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true
-        }).then(stream => {
-          resolve(stream)
-        }).catch(err => {
-          reject(err);
-        });
-      });
+    async leftTheRoom() {
+      let data = {
+        username: this.$store.getters['user/getUser'].name,
+      };
+
+      this.webrtc.leftRoom(this.room.id, data);
+      this.exitConference();
     },
-    async userConnected() {
-      return new Promise((resolve, reject) => {
-        this.webrtc.socket.on('user-connected', userId => {
-          if (!userId) {
-            resolve(userId);
-            return;
-          }
-          reject('User Id is null');
-          return;
-        });
-      });
+    exitConference() {
+      this.$emit('onCloseConference');
     },
-    connectToNewUser(peerUserId, stream) {
-      const call = this.websocket.peerJS.videoPeer.call(peerUserId, stream);
-      call.on('stream', peerVideoStream => {
-        this.addVideoStream(this.$refs.peer, peerVideoStream);
-      });
-      call.on('close', () => {
-        this.$refs.video.remove();
-      });
+    userLeftRoom(data) {
+      console.log(data.username + ' left room!');
     },
-    addVideoStream(video, stream) {
-      video.muted = true;
-      video.srcObject = stream;
-      video.addEventListener('loadedmetadata', () => {
-        video.play();
-      });
+    userJoinRoom(peerUserId) {
+      console.log('user join to room: ' + peerUserId);
     },
+    invalidRoom() {
+      this.roomIsValid = false;
+    },
+    controlAudio() {
+      this.webrtc.audioControll(!this.audioStatus);
+    }
+  },
+  beforeUnmount() {
+    this.leftTheRoom();
   }
 }
 </script>
+
+<style lang="scss">
+#video-conference {
+  .box {
+    display: inline-block;
+    width: 100%;
+    max-width: 480px;
+    padding: 15px;
+
+    @media (max-width: 480px) {
+      max-width: 100%;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 8px;
+    }
+  }
+}
+</style>

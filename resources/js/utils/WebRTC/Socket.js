@@ -1,11 +1,9 @@
 import socketio from 'socket.io-client';
-import peerjs from '../peerjs/PeerJs';
 
 class SocketIO
 {
   constructor() {
     this.socket = null;
-    this.peerJS = null;
     this.events = [];
     this.initialized = false;
   }
@@ -16,10 +14,6 @@ class SocketIO
       autoConnect: false,
       transports: ['websocket'],
     });
-  }
-
-  connectPeerJs() {
-    this.peerJS = new peerjs();
   }
 
   listen(event_name, callback) {
@@ -64,14 +58,6 @@ class SocketIO
 
   async restored() {
     return await this.restoredCheck.restored();
-  }
-
-  joinRoom(roomId, userId) {
-    this.socket.emit('join-room', roomId, userId );
-  }
-
-  onJoinRoom(userId) {
-
   }
 }
 

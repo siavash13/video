@@ -94,9 +94,12 @@ export default {
   margin: 0 50px 0 0;
   border: 1px dashed #718096;
 
+  @media (max-width: 768px) {
+    margin: 0 0 50px 0;
+  }
+
   div {
     margin-bottom: 20px;
-
 
     label {
       width: 150px;

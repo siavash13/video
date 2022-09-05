@@ -43,18 +43,11 @@
     <div v-if="message.status" :style="{ color:message.color }">
       {{ message.text }}
     </div>
-
-    <VideoConference
-        ref="video"
-        :user="user"
-        :room="room.id"
-    />
   </div>
 </template>
 
 <script>
 import socketConfig from "../../configs/socket";
-import VideoConference from "./VideoConference";
 
 export default {
   name: "RoomJoin",
@@ -91,7 +84,7 @@ export default {
         return false;
       }
 
-      this.$refs.video.initialize();
+      this.$emit('onRoomJoin', this.room);
     },
     getRoomsList() {
       this.showRooms = !this.showRooms;
@@ -115,9 +108,6 @@ export default {
       });
     },
   },
-  components: {
-    VideoConference,
-  }
 }
 </script>
 
@@ -128,6 +118,10 @@ export default {
   padding: 10px;
   margin: 0 0 0 50px;
   border: 1px dashed #718096;
+
+  @media (max-width: 768px) {
+    margin: 0;
+  }
 
   div {
     margin-bottom: 20px;

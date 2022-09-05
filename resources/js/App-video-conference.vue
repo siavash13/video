@@ -7,8 +7,6 @@
 
 <script>
 import Rooms from "./components/webrtc/Rooms";
-import VideoConference from "./components/webrtc/VideoConference";
-import {inject} from "vue";
 
 export default {
   components: {
@@ -17,6 +15,3 @@ export default {
 }
 </script>
 
-<style lang="scss">
-
-</style>

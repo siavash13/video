@@ -1,11 +1,9 @@
-require('./bootstrap');
-
 import { createApp } from "vue";
 
-import webrtcSocket from './utils/socket/webRtcSocket'
+import WebRTC from './utils/WebRTC/WebRTC'
 
 import App from "./App-video-conference.vue";
 
 const app = createApp(App);
 
-app.provide('webrtc', webrtcSocket).mount("#app");
+app.provide('webrtc', WebRTC).mount("#app");

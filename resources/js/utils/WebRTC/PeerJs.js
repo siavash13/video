@@ -8,16 +8,13 @@ class VideoPeer
     this.videoPeer = new PeerJS(undefined, {
       host: socketConfig.peer_host,
       port: socketConfig.peer_port,
+    }).on('open', (id) => {
+      this.peerJsId = id;
     });
   }
 
-  async open() {
-    return new Promise((resolve, reject) => {
-      this.videoPeer.on('open', (id) => {
-        resolve(id);
-        return;
-      });
-    });
+  getId() {
+    return this.peerJsId;
   }
 }
 

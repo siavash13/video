@@ -1,13 +1,24 @@
 <template>
   <div id="room-section">
     <div v-if="!!user">
-      <RoomCreate
-        :user="user"
-      />
+      <div v-show="!initalizeVideo">
+        <RoomCreate
+            :user="user"
+        />
 
-      <RoomJoin
-        :user="user"
-      />
+        <RoomJoin
+            :user="user"
+            @onRoomJoin="joinToRoom"
+        />
+      </div>
+
+      <div v-show="initalizeVideo">
+        <VideoConference
+          ref="conference"
+          @onCloseConference="closeConference"
+          :user="user"
+        />
+      </div>
     </div>
     <div v-else-if="!error">
       <h2>Please Wait{{ waitingDots }}</h2>
@@ -22,6 +33,7 @@
 <script>
 import RoomJoin from "./RoomJoin";
 import RoomCreate from "./RoomCreate";
+import VideoConference from "./VideoConference";
 
 export default {
   name: "Rooms",
@@ -31,16 +43,20 @@ export default {
   data() {
     return {
       user: null,
+      room: {
+        id: null
+      },
       waitingDots: '.',
       interval: null,
       error: null,
+      initalizeVideo: false,
     }
   },
   methods: {
     getUserAccessToken() {
       this.interval = setInterval(this.setWaitingDots, 500);
 
-      axios.get('/api/videoconference/userToken').then(response => {
+      axios.get('/videoconference/userToken').then(response => {
         this.user = response.data.data;
       }, error => {
         this.error = 'Error happened! ' + error.response.data.message;
@@ -54,7 +70,14 @@ export default {
       } else {
         this.waitingDots = '';
       }
-    }
+    },
+    joinToRoom(room) {
+      this.initalizeVideo = true;
+      this.$refs.conference.initialize(room);
+    },
+    closeConference() {
+      this.initalizeVideo = false;
+    },
   },
   beforeDestroy() {
     clearInterval(this.interval);
@@ -62,6 +85,7 @@ export default {
   components: {
     RoomCreate,
     RoomJoin,
+    VideoConference,
   },
 }
 </script>
