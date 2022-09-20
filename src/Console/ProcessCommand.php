@@ -64,6 +64,6 @@ class ProcessCommand extends Command
     {
         $vueVersion = ($version == 'Vue2') ? 'vue2' : 'vue';
 
-        $this->warn('Please install dependencies packages by running \'npm install '.$vueVersion.' vue-loader peerjs socket.io-client@^4.1.2\' ');
+        $this->warn('Please install dependencies packages by running \'npm install '.$vueVersion.' vue-loader axios peerjs socket.io-client@^4.1.2\' ');
     }
 }
