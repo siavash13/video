@@ -6,7 +6,6 @@ use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Contracts\Http\Kernel;
-use Codenidus\VideoConference\VideoConference;
 use Codenidus\VideoConference\Http\Middleware\BaseVideoConferenceAuthorize;
 
 
@@ -26,6 +25,8 @@ class VideoConferenceServiceProvider extends ServiceProvider
         $this->registerRoutes();
         $this->registerResources();
         $this->registerVueAssetsPublish();
+        $this->registerVue2AssetsPublish();
+        $this->registerVue3AssetsPublish();
         $this->registerConfigFilePublish();
         $this->registerMiddlewareFilePublish();
 
@@ -44,18 +45,37 @@ class VideoConferenceServiceProvider extends ServiceProvider
     public function registerVueAssetsPublish()
     {
         $this->publishes([
-            __DIR__.'/../resources/js/app-video-conference.js' => resource_path('js/app-video-conference.js'),
             __DIR__.'/../resources/js/App-video-conference.vue' => resource_path('js/App-video-conference.vue'),
-            __DIR__.'/../resources/js/components/webrtc/VideoConference.vue' => resource_path('js/components/webrtc/VideoConference.vue'),
             __DIR__.'/../resources/js/components/webrtc/Rooms.vue' => resource_path('js/components/webrtc/Rooms.vue'),
             __DIR__.'/../resources/js/components/webrtc/RoomCreate.vue' => resource_path('js/components/webrtc/RoomCreate.vue'),
+            __DIR__.'/../resources/js/components/webrtc/RoomsList.vue' => resource_path('js/components/webrtc/RoomsList.vue'),
             __DIR__.'/../resources/js/components/webrtc/RoomJoin.vue' => resource_path('js/components/webrtc/RoomJoin.vue'),
-            __DIR__.'/../resources/js/configs/socket.js' => resource_path('js/configs/socket.js'),
+            __DIR__.'/../resources/js/configs/webRTCsocket.js' => resource_path('js/configs/webRTCsocket.js'),
             __DIR__.'/../resources/js/router/webrtc.js' => resource_path('js/router/webrtc.js'),
             __DIR__.'/../resources/js/utils/WebRTC/PeerJs.js' => resource_path('js/utils/WebRTC/PeerJs.js'),
             __DIR__.'/../resources/js/utils/WebRTC/Socket.js' => resource_path('js/utils/WebRTC/Socket.js'),
             __DIR__.'/../resources/js/utils/WebRTC/WebRTC.js' => resource_path('js/utils/WebRTC/WebRTC.js'),
+            __DIR__.'/../resources/js/utils/WebRTC/webRTCHelper.js' => resource_path('js/utils/WebRTC/webRTCHelper.js'),
         ], 'videoconference-vue');
+    }
+
+    public function registerVue2AssetsPublish()
+    {
+        $this->publishes([
+            __DIR__.'/../resources/js/vue2/app-video-conference.js' => resource_path('js/app-video-conference.js'),
+            __DIR__.'/../resources/js/vue2/router-video-conference.js' => resource_path('js/router/router-video-conference.js'),
+            __DIR__.'/../resources/js/vue2/VideoConference.vue' => resource_path('js/components/webrtc/VideoConference.vue'),
+            __DIR__.'/../resources/js/vue2/webRTCIndex.js' => resource_path('js/utils/WebRTC/index.js'),
+        ], 'videoconference-vue2');
+    }
+
+    public function registerVue3AssetsPublish()
+    {
+        $this->publishes([
+            __DIR__.'/../resources/js/vue3/app-video-conference.js' => resource_path('js/app-video-conference.js'),
+            __DIR__.'/../resources/js/vue3/router-video-conference.js' => resource_path('js/router/router-video-conference.js'),
+            __DIR__.'/../resources/js/components/webrtc/VideoConference.vue' => resource_path('js/components/webrtc/VideoConference.vue'),
+        ], 'videoconference-vue3');
     }
 
     public function registerConfigFilePublish()
@@ -138,7 +158,7 @@ class VideoConferenceServiceProvider extends ServiceProvider
 
     protected function apiRouteConfiguration()
     {
-        $middlewareList = array_merge( ['api', 'auth:sanctum', 'videoconferenceAuthorize'],
+        $middlewareList = array_merge( ['api', 'videoconferenceAuthorize'],
             config('video-conference.routes.api.middleware', []));
 
         return [

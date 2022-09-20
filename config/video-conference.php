@@ -17,7 +17,7 @@ return [
             'middleware' => [],
         ],
         'api' => [
-            'middleware' => [],
+            'middleware' => ['auth:sanctum'],
         ],
     ]
 ];

@@ -23,21 +23,12 @@
 </template>
 
 <script>
-import { inject } from "vue";
-
 export default {
   name: "VideoConference",
-  props: ['user'],
-  setup() {
-    const webrtc = inject('webrtc');
-
-    return {
-      webrtc,
-    }
-  },
   data() {
     return {
       room: null,
+      token: null,
       roomIsValid: true,
       connections: [],
       audioStatus: true,
@@ -45,39 +36,40 @@ export default {
   },
   methods: {
     async connect() {
-      if (!this.webrtc.socket.connected) {
-        this.webrtc.connection({
-          token: this.user.token
+      if (!this.$webrtc.socket.connected) {
+        this.$webrtc.connection({
+          token: this.token
         });
 
-        this.webrtc.socket.on("connect", () => {
+        this.$webrtc.socket.on("connect", () => {
           console.log('socket connected!');
         });
       }
     },
-    async initialize(room = null) {
+    async initialize(room = null, token = null) {
       this.room = room;
+      this.token = token;
       this.audioStatus = true;
       this.roomIsValid = true;
       this.connections = [];
 
-      if (!this.webrtc.socket) {
+      if (!this.$webrtc.socket) {
         return;
       }
 
-      if(!this.user) {
+      if(!this.token) {
         console.log('Connection is not established with server.');
         return;
       }
 
-      if(!this.room) {
+      if(!this.room || !this.room.id) {
         console.log('Please set the room id for joining.');
         return;
       }
 
       await this.connect();
 
-      this.webrtc.setup({
+      this.$webrtc.setup({
         refs: this.$refs,
         videoRef: 'video',
         peerRef:  'peer',
@@ -88,8 +80,8 @@ export default {
       });
 
       try {
-        await this.webrtc.initialPeerJs();
-        this.webrtc.joinRoom(this.room.id);
+        await this.$webrtc.initialPeerJs();
+        this.$webrtc.joinRoom(this.room.id);
       } catch (error) {
         console.log('webrtc initialize error:');
         console.log(error);
@@ -97,10 +89,10 @@ export default {
     },
     async leftTheRoom() {
       let data = {
-        username: this.$store.getters['user/getUser'].name,
+        username: 'user-name',
       };
 
-      this.webrtc.leftRoom(this.room.id, data);
+      this.$webrtc.leftRoom(this.room.id, data);
       this.exitConference();
     },
     exitConference() {
@@ -116,7 +108,7 @@ export default {
       this.roomIsValid = false;
     },
     controlAudio() {
-      this.webrtc.audioControll(!this.audioStatus);
+      this.$webrtc.audioControll(!this.audioStatus);
     }
   },
   beforeUnmount() {

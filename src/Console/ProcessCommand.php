@@ -13,11 +13,16 @@ class ProcessCommand extends Command
 
     public function handle()
     {
+        $version = $this->choice(
+            'Which vue version would you like to use?',
+            ['Vue2', 'Vue3']
+        );
+
         $this->publishConfigFile();
         $this->createDatabaseTable();
         $this->publishMiddlewareFile();
-        $this->publishVueAssets();
-        $this->writeCommentOnScreen();
+        $this->publishVueAssets($version);
+        $this->writeCommentOnScreen($version);
     }
 
     protected function createDatabaseTable()
@@ -27,10 +32,16 @@ class ProcessCommand extends Command
         (new \CreateRoomTable)->up();
     }
 
-    protected function publishVueAssets()
+    protected function publishVueAssets($version)
     {
         $this->info('Publishing Video Conference Vue Assets...');
         $this->callSilent('vendor:publish', ['--tag' => 'videoconference-vue']);
+
+        if ($version == 'Vue2') {
+            $this->callSilent('vendor:publish', ['--tag' => 'videoconference-vue2']);
+        } else {
+            $this->callSilent('vendor:publish', ['--tag' => 'videoconference-vue3']);
+        }
     }
 
     protected function publishConfigFile()
@@ -49,8 +60,10 @@ class ProcessCommand extends Command
         }
     }
 
-    protected function writeCommentOnScreen()
+    protected function writeCommentOnScreen($version)
     {
-      $this->warn('Please install dependencies packages by running \'npm install vue vue-loader peerjs socket.io-client@^4.1.2\' ');
+        $vueVersion = ($version == 'Vue2') ? 'vue2' : 'vue';
+
+        $this->warn('Please install dependencies packages by running \'npm install '.$vueVersion.' vue-loader peerjs socket.io-client@^4.1.2\' ');
     }
 }

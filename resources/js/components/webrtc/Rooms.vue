@@ -1,24 +1,13 @@
 <template>
-  <div id="room-section">
-    <div v-if="!!user">
-      <div v-show="!initalizeVideo">
+  <div>
+    <div v-if="!!token" id="rooms-section">
         <RoomCreate
-            :user="user"
+            :token="token"
         />
 
-        <RoomJoin
-            :user="user"
-            @onRoomJoin="joinToRoom"
+        <RoomsList
+            :token="token"
         />
-      </div>
-
-      <div v-show="initalizeVideo">
-        <VideoConference
-          ref="conference"
-          @onCloseConference="closeConference"
-          :user="user"
-        />
-      </div>
     </div>
     <div v-else-if="!error">
       <h2>Please Wait{{ waitingDots }}</h2>
@@ -31,36 +20,30 @@
 </template>
 
 <script>
-import RoomJoin from "./RoomJoin";
+import RoomsList from "./RoomsList";
 import RoomCreate from "./RoomCreate";
-import VideoConference from "./VideoConference";
+import webRTCHelper from "@/utils/WebRTC/webRTCHelper";
 
 export default {
   name: "Rooms",
   created() {
     this.getUserAccessToken();
   },
+  mixins: [webRTCHelper],
   data() {
     return {
-      user: null,
-      room: {
-        id: null
-      },
+      token: null,
       waitingDots: '.',
       interval: null,
       error: null,
-      initalizeVideo: false,
     }
   },
   methods: {
     getUserAccessToken() {
       this.interval = setInterval(this.setWaitingDots, 500);
 
-      axios.get('/videoconference/userToken').then(response => {
-        this.user = response.data.data;
-      }, error => {
-        this.error = 'Error happened! ' + error.response.data.message;
-      }).finally(() => {
+      this.webrtcGetUserToken((token) => {
+        this.token = token;
         clearInterval(this.interval);
       });
     },
@@ -71,28 +54,21 @@ export default {
         this.waitingDots = '';
       }
     },
-    joinToRoom(room) {
-      this.initalizeVideo = true;
-      this.$refs.conference.initialize(room);
-    },
-    closeConference() {
-      this.initalizeVideo = false;
-    },
   },
   beforeDestroy() {
     clearInterval(this.interval);
   },
   components: {
     RoomCreate,
-    RoomJoin,
-    VideoConference,
+    RoomsList,
   },
 }
 </script>
 
 <style lang="scss">
-  #room-section {
-    margin-top: 100px;
+  #rooms-section {
+    display: flex;
+    justify-content: space-around;
     text-align: center;
 
     .error {

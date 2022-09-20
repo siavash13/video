@@ -1,6 +1,6 @@
 import Socket from "./Socket";
 import PeerJs from "./PeerJs";
-import socketConfig from '../../configs/socket';
+import socketConfig from '../../configs/webRTCsocket';
 
 class Webrtc
 {

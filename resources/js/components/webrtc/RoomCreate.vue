@@ -30,11 +30,11 @@
 </template>
 
 <script>
-import socketConfig from "../../configs/socket";
+import socketConfig from "../../configs/webRTCsocket";
 
 export default {
   name: "RoomCreate",
-  props: ['user'],
+  props: ['token'],
   computed: {
     baseUrl() {
       return socketConfig.webrtc_url + '/api/rooms';
@@ -60,7 +60,7 @@ export default {
       e.preventDefault();
       this.message.status = false;
       let headers = {
-        'user-token': this.user.token
+        'user-token': this.token
       };
 
       if (!(this.room.name && this.room.moderator && this.room.start_time && this.room.end_time)) {
