@@ -14,7 +14,7 @@
 
 <script>
 import VideoConference from "./VideoConference";
-import webRTCHelper from "@/utils/WebRTC/webRTCHelper";
+import webRTCHelper from "../../utils/WebRTC/webRTCHelper";
 
 export default {
   name: "RoomJoin",

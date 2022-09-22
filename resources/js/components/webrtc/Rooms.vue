@@ -22,7 +22,7 @@
 <script>
 import RoomsList from "./RoomsList";
 import RoomCreate from "./RoomCreate";
-import webRTCHelper from "@/utils/WebRTC/webRTCHelper";
+import webRTCHelper from "../../utils/WebRTC/webRTCHelper";
 
 export default {
   name: "Rooms",

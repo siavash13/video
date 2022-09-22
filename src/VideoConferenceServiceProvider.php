@@ -74,7 +74,7 @@ class VideoConferenceServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../resources/js/vue3/app-video-conference.js' => resource_path('js/app-video-conference.js'),
             __DIR__.'/../resources/js/vue3/router-video-conference.js' => resource_path('js/router/router-video-conference.js'),
-            __DIR__.'/../resources/js/components/webrtc/VideoConference.vue' => resource_path('js/components/webrtc/VideoConference.vue'),
+            __DIR__.'/../resources/js/vue3/VideoConference.vue' => resource_path('js/components/webrtc/VideoConference.vue'),
         ], 'videoconference-vue3');
     }
 

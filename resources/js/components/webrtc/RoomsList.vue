@@ -18,7 +18,7 @@
           :key="'room_' + index"
         >
           <td>
-            <router-link :to="{ name: 'joinRoom', params: { roomId: room._id }}">
+            <router-link :to="{ name: 'webrtcJoinRoom', params: { roomId: room._id }}">
               {{ room._id }}
             </router-link>
           </td>

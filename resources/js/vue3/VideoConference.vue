@@ -7,7 +7,6 @@
     <div class="box" v-show="roomIsValid">
       <div>
         <a href="#" @click.prevent="leftTheRoom">Left Room</a>
-        <a href="#" @click.prevent="controlAudio">1</a>
       </div>
       <video id="video-content" class="video-item" ref="video"></video>
     </div>
@@ -40,7 +39,6 @@ export default {
       token: null,
       roomIsValid: true,
       connections: [],
-      audioStatus: true,
     }
   },
   methods: {
@@ -58,7 +56,6 @@ export default {
     async initialize(room = null, token = null) {
       this.room = room;
       this.token = token;
-      this.audioStatus = true;
       this.roomIsValid = true;
       this.connections = [];
 
@@ -116,9 +113,6 @@ export default {
     invalidRoom() {
       this.roomIsValid = false;
     },
-    controlAudio() {
-      this.webrtc.audioControll(!this.audioStatus);
-    }
   },
   beforeUnmount() {
     this.leftTheRoom();
