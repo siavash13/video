@@ -4,20 +4,15 @@
       The desired room was not found! Please try to connect to an available room.
       <a href="#" @click.prevent="leftTheRoom()">Back</a>
     </div>
-    <div class="box" v-show="roomIsValid">
-      <div>
-        <a href="#" @click.prevent="leftTheRoom">Left Room</a>
-      </div>
-      <video id="video-content" class="video-item" ref="video"></video>
-    </div>
-    <div
-      class="box"
-      v-show="roomIsValid"
-      v-for="(connection, index) in connections"
-      :key="'connection_' + index"
-    >
-      <video v-show="connection.active" id="peer-content" class="video-item" ref="peer"></video>
-    </div>
+
+    <component
+        v-if="themeReady"
+        v-show="roomIsValid"
+        :is="themeLayout"
+        :connections="connections"
+        :userSettings="userSettings"
+        @onLeftRoom="leftTheRoom"
+    />
   </div>
 </template>
 
@@ -33,12 +28,22 @@ export default {
       webrtc,
     }
   },
+  async created() {
+    await this.setThemeLayout();
+  },
+  props: ['name'],
   data() {
     return {
       room: null,
       token: null,
       roomIsValid: true,
       connections: [],
+      userSettings: {
+        isCreator: false,
+      },
+      theme: 'Default',
+      themeReady: false,
+      themeLayout: null,
     }
   },
   methods: {
@@ -48,7 +53,7 @@ export default {
           token: this.token
         });
 
-        this.webrtc.socket.on("connect", () => {
+        this.webrtc.socket.once("connect", () => {
           console.log('socket connected!');
         });
       }
@@ -76,10 +81,10 @@ export default {
       await this.connect();
 
       this.webrtc.setup({
-        refs: this.$refs,
-        videoRef: 'video',
-        peerRef:  'peer',
+        videoRef: '.video-content',
+        peerRef:  '.peer-content',
         connections: this.connections,
+        userSettings: this.userSettings,
         joinRoom: this.userJoinRoom,
         leftRoom: this.userLeftRoom,
         invalidRoom: this.invalidRoom,
@@ -87,7 +92,9 @@ export default {
 
       try {
         await this.webrtc.initialPeerJs();
-        this.webrtc.joinRoom(this.room.id);
+        this.webrtc.joinRoom(this.room.id,{
+          name: this.name
+        });
       } catch (error) {
         console.log('webrtc initialize error:');
         console.log(error);
@@ -95,7 +102,7 @@ export default {
     },
     async leftTheRoom() {
       let data = {
-        username: 'user-name',
+        username: this.name,
       };
 
       this.webrtc.leftRoom(this.room.id, data);
@@ -107,11 +114,32 @@ export default {
     userLeftRoom(data) {
       console.log(data.username + ' left room!');
     },
-    userJoinRoom(peerUserId) {
-      console.log('user join to room: ' + peerUserId);
+    userJoinRoom(data) {
+      console.log('user join to room: ' + data.peerJsId);
     },
     invalidRoom() {
       this.roomIsValid = false;
+    },
+    async setThemeLayout() {
+      let theme = null;
+      let themeName = this.capitalizeFirstLetter(this.theme);
+
+      try {
+        theme = await this.loadThemeLayout(themeName);
+      } catch(error) {
+        theme = await this.loadThemeLayout('Default');
+      }
+
+      this.themeReady = true;
+      this.themeLayout = theme.default;
+    },
+    async loadThemeLayout(themeName) {
+      let layout = async () => import('./themes/' + themeName + 'VideoConference.vue');
+      return await layout();
+    },
+    capitalizeFirstLetter(text) {
+      let _text = text.toLowerCase();
+      return _text.charAt(0).toUpperCase() + _text.slice(1);
     },
   },
   beforeUnmount() {
@@ -119,23 +147,3 @@ export default {
   }
 }
 </script>
-
-<style lang="scss">
-#video-conference {
-  .box {
-    display: inline-block;
-    width: 100%;
-    max-width: 480px;
-    padding: 15px;
-
-    @media (max-width: 480px) {
-      max-width: 100%;
-    }
-
-    video {
-      width: 100%;
-      border-radius: 8px;
-    }
-  }
-}
-</style>

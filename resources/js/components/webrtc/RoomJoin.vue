@@ -3,9 +3,15 @@
     <div v-if="!token">
       Wait for user authorization token...
     </div>
+    <div v-if="token">
+      <label>Name:</label>
+      <input type="text" v-model="name" />
+      <button :disabled="!name" @click="JoinToRoom">Join Room</button>
+    </div>
     <div v-show="initializeVideo">
       <VideoConference
         ref="conference"
+        :name="name"
         @onCloseConference="closeConference"
       />
     </div>
@@ -29,6 +35,7 @@ export default {
     return {
       initializeVideo: false,
       token: null,
+      name: null,
       room: {
         id: null,
       },
@@ -44,7 +51,6 @@ export default {
     getUserAccessToken() {
       this.webrtcGetUserToken((token) => {
         this.token = token;
-        this.joinToRoom();
       });
     },
     joinToRoom() {
@@ -63,6 +69,6 @@ export default {
 
 <style lang="scss">
 #room-join {
-  max-width: 500px;
+  padding: 25px;
 }
 </style>
