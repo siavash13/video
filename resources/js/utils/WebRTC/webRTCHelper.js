@@ -37,6 +37,12 @@ export default {
           reject('Error happened! ' + error.response.data.message);
         });
       });
-    }
+    },
+    webrtcRemoveUserToken() {
+      localStorage.setItem(this.webrtcStorageKey, JSON.stringify({
+        token: null,
+        expired: null,
+      }));
+    },
   }
 }

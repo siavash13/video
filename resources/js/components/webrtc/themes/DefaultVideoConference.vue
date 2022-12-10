@@ -3,6 +3,20 @@
     <div>
       <a href="#" @click.prevent="leftTheRoom">Left Room</a>
     </div>
+    <div class="room-actions">
+      <a
+        class="action-item"
+        @click.prevent="runAction('terminate')"
+      >
+        (Terminate)
+      </a>
+      <a
+        class="action-item"
+        @click.prevent="runAction('info')"
+      >
+        (Info Log)
+      </a>
+    </div>
     <div
       id="video-conference-users"
       :class="{ 'two-user-joined': (connections.length <= 1), 'multi-user-joined': (connections.length > 1)}"
@@ -11,7 +25,10 @@
         :class="{ 'room-creator': userSettings.isCreator , 'room-user': !userSettings.isCreator }"
       >
         <div class="room-item">
-          <video class="video-content video-item"></video>
+          <div class="user-actions"></div>
+          <div class="user-video">
+            <video class="video-content video-item"></video>
+          </div>
         </div>
       </div>
 
@@ -22,9 +39,39 @@
       >
         <div class="room-item">
           <div class="user-name" v-text="connection.name"></div>
-          <video v-show="connection.active" class="peer-content video-item"></video>
+          <div class="user-actions">
+            <a
+              v-if="userSettings.isCreator"
+              class="ban-user"
+              @click.prevent="runAction('ban', {
+                peerJsId: connection.peerJsId
+              })"
+            >
+              (Ban)
+            </a>
+            <a
+              class="alert-user"
+              @click.prevent="runAction('alert', {
+                peerJsId: connection.peerJsId
+              })"
+            >
+              (Alert)
+            </a>
+            <a
+              v-if="userSettings.isCreator"
+              @click.prevent="runAction('multy', {
+                peerJsId: connection.peerJsId
+              })"
+            >
+              (Ban in 5 sec)
+            </a>
+          </div>
+          <div class="user-video">
+            <video v-show="connection.active" class="peer-content video-item"></video>
+          </div>
         </div>
       </div>
+
     </div>
   </div>
 </template>
@@ -39,6 +86,12 @@ export default {
   methods: {
     leftTheRoom() {
       this.$emit('onLeftRoom');
+    },
+    runAction(name, data = {}) {
+      this.$emit('onRunAction', {
+        name: name,
+        data: data
+      });
     }
   }
 }
@@ -67,10 +120,6 @@ export default {
       .room-creator,
       .room-user {
         width: 50%;
-
-        .room-item {
-          height: 45vh;
-        }
       }
     }
   }
@@ -98,36 +147,52 @@ export default {
     }
   }
 
-  video {
-    width: 100%;
-    border-radius: 8px;
-  }
-
-  .user-name {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    display: inline-block;
-    color: #fff;
-    padding: 5px 10px;
-
-    &:before {
-      content: ' ';
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      right: 0;
-      opacity: 0.6;
-      background: #000;
-    }
-  }
 
   .room-item {
     position: relative;
-   // width: 100%;
-    //    height: 250px;
-    //    background: #ff00ff;
+    padding: 15px;
+
+    .user-name {
+      position: absolute;
+      z-index: 2;
+      left: 15px;
+      bottom: 15px;
+      display: inline-block;
+      color: #fff;
+      padding: 5px 10px;
+      overflow: hidden;
+      border-bottom-left-radius: 8px;
+
+      &:before {
+        content: ' ';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        opacity: 0.6;
+        background: #000;
+      }
+    }
+
+    .user-actions {
+      min-height: 20px;
+    }
+
+    .user-video {
+      position: relative;
+      width: 100%;
+      padding-bottom: 100%;
+
+      video {
+        position: absolute;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        border-radius: 8px;
+        object-fit: cover;
+      }
+    }
   }
 }
 </style>

@@ -59,6 +59,12 @@ class SocketIO
   async restored() {
     return await this.restoredCheck.restored();
   }
+
+  setEvent(name, next) {
+    if(this.socket) {
+
+    }
+  }
 }
 
 export default SocketIO;

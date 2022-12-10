@@ -12,12 +12,43 @@
         :connections="connections"
         :userSettings="userSettings"
         @onLeftRoom="leftTheRoom"
+        @onRunAction="runAction"
+    />
+
+    <BanAction
+        ref="actions[ban]"
+        :webrtc="webrtc"
+    />
+
+    <TerminateAction
+        ref="actions[terminate]"
+        :webrtc="webrtc"
+    />
+
+    <InfoAction
+        ref="actions[info]"
+        :webrtc="webrtc"
+    />
+
+    <AlertAction
+        ref="actions[alert]"
+        :webrtc="webrtc"
+    />
+
+    <MultiAction
+        ref="actions[multi]"
+        :webrtc="webrtc"
     />
   </div>
 </template>
 
 <script>
-import { inject } from "vue";
+import { inject, shallowRef } from "vue";
+import InfoAction from "./actions/InfoAction";
+import BanAction from "./actions/BanAction";
+import TerminateAction from "./actions/TerminateAction";
+import AlertAction from "./actions/AlertAction";
+import MultiAction from "./actions/MultiAction";
 
 export default {
   name: "VideoConference",
@@ -43,20 +74,23 @@ export default {
       },
       theme: 'Default',
       themeReady: false,
-      themeLayout: null,
+      themeLayout: shallowRef(null),
     }
   },
   methods: {
-    async connect() {
-      if (!this.webrtc.socket.connected) {
-        this.webrtc.connection({
-          token: this.token
-        });
+    connect() {
+      return new Promise((resolve, reject) => {
+        if (!this.webrtc.socket.connected) {
+          this.webrtc.connection({
+            token: this.token
+          });
 
-        this.webrtc.socket.once("connect", () => {
-          console.log('socket connected!');
-        });
-      }
+          this.webrtc.socket.once("connect", () => {
+            console.log('socket connected!');
+            resolve(true);
+          });
+        }
+      });
     },
     async initialize(room = null, token = null) {
       this.room = room;
@@ -78,34 +112,40 @@ export default {
         return;
       }
 
-      await this.connect();
-
-      this.webrtc.setup({
-        videoRef: '.video-content',
-        peerRef:  '.peer-content',
-        connections: this.connections,
-        userSettings: this.userSettings,
-        joinRoom: this.userJoinRoom,
-        leftRoom: this.userLeftRoom,
-        invalidRoom: this.invalidRoom,
-      });
-
-      try {
-        await this.webrtc.initialPeerJs();
-        this.webrtc.joinRoom(this.room.id,{
-          name: this.name
+      this.connect().then(async () => {
+        this.webrtc.setup({
+          options: {
+            videoRef: '.video-content',
+            peerRef:  '.peer-content',
+          },
+          callback: {
+            joinRoom: this.userJoinRoom,
+            leftRoom: this.userLeftRoom,
+            invalidRoom: this.invalidRoom,
+            exitConference: this.exitConference,
+            banInRoom: this.banInRoom,
+          },
+          connections: this.connections,
+          userSettings: this.userSettings,
         });
-      } catch (error) {
-        console.log('webrtc initialize error:');
-        console.log(error);
-      }
+
+        try {
+          await this.webrtc.initialPeerJs();
+          this.webrtc.Room.join(this.room.id,{
+            name: this.name
+          });
+        } catch (error) {
+          console.log('webrtc initialize error:');
+          console.log(error);
+        }
+      });
     },
     async leftTheRoom() {
       let data = {
         username: this.name,
       };
 
-      this.webrtc.leftRoom(this.room.id, data);
+      this.webrtc.Room.left(this.room.id, data);
       this.exitConference();
     },
     exitConference() {
@@ -141,9 +181,24 @@ export default {
       let _text = text.toLowerCase();
       return _text.charAt(0).toUpperCase() + _text.slice(1);
     },
+    runAction(action) {
+      const actionRefName = 'actions[' + action.name + ']';
+      this.$refs[actionRefName].run(this.room, action.data || {});
+    },
+    banInRoom(data) {
+      alert('you are ban! :))))');
+      this.exitConference();
+    }
   },
   beforeUnmount() {
     this.leftTheRoom();
+  },
+  components: {
+    InfoAction,
+    BanAction,
+    TerminateAction,
+    AlertAction,
+    MultiAction,
   }
 }
 </script>

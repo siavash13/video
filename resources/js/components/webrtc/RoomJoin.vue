@@ -3,10 +3,10 @@
     <div v-if="!token">
       Wait for user authorization token...
     </div>
-    <div v-if="token">
+    <div v-else v-show="!initializeVideo">
       <label>Name:</label>
       <input type="text" v-model="name" />
-      <button :disabled="!name" @click="JoinToRoom">Join Room</button>
+      <button :disabled="!name" @click="joinToRoom">Join Room</button>
     </div>
     <div v-show="initializeVideo">
       <VideoConference
