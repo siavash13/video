@@ -59,7 +59,7 @@
             </a>
             <a
               v-if="userSettings.isCreator"
-              @click.prevent="runAction('multy', {
+              @click.prevent="runAction('multi', {
                 peerJsId: connection.peerJsId
               })"
             >

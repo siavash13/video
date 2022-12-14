@@ -50,6 +50,7 @@ class VideoConferenceServiceProvider extends ServiceProvider
             __DIR__.'/../resources/js/components/webrtc/RoomCreate.vue' => resource_path('js/components/webrtc/RoomCreate.vue'),
             __DIR__.'/../resources/js/components/webrtc/RoomsList.vue' => resource_path('js/components/webrtc/RoomsList.vue'),
             __DIR__.'/../resources/js/components/webrtc/RoomJoin.vue' => resource_path('js/components/webrtc/RoomJoin.vue'),
+            __DIR__.'/../resources/js/components/webrtc/VideoConferenceActions.vue' => resource_path('js/components/webrtc/VideoConferenceActions.vue'),
             __DIR__.'/../resources/js/components/webrtc/actions/AlertAction.vue' => resource_path('js/components/webrtc/actions/AlertAction.vue'),
             __DIR__.'/../resources/js/components/webrtc/actions/BanAction.vue' => resource_path('js/components/webrtc/actions/BanAction.vue'),
             __DIR__.'/../resources/js/components/webrtc/actions/InfoAction.vue' => resource_path('js/components/webrtc/actions/InfoAction.vue'),

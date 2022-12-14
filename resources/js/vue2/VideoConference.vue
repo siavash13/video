@@ -15,39 +15,17 @@
       @onRunAction="runAction"
     />
 
-    <BanAction
-        ref="actions[ban]"
+    <VideoConferenceActions
+        ref="actions"
+        :room="room"
         :webrtc="$webrtc"
     />
 
-    <TerminateAction
-        ref="actions[terminate]"
-        :webrtc="$webrtc"
-    />
-
-    <InfoAction
-        ref="actions[info]"
-        :webrtc="$webrtc"
-    />
-
-    <AlertAction
-        ref="actions[alert]"
-        :webrtc="$webrtc"
-    />
-
-    <MultiAction
-        ref="actions[multi]"
-        :webrtc="$webrtc"
-    />
   </div>
 </template>
 
 <script>
-import InfoAction from "./actions/InfoAction";
-import BanAction from "./actions/BanAction";
-import TerminateAction from "./actions/TerminateAction";
-import AlertAction from "./actions/AlertAction";
-import MultiAction from "./actions/MultiAction";
+import VideoConferenceActions from "./VideoConferenceActions";
 
 export default {
   name: "VideoConference",
@@ -186,11 +164,7 @@ export default {
     this.leftTheRoom();
   },
   components: {
-    InfoAction,
-    BanAction,
-    TerminateAction,
-    AlertAction,
-    MultiAction,
+    VideoConferenceActions,
   }
 }
 </script>
