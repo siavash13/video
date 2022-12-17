@@ -35,12 +35,22 @@ class ProcessCommand extends Command
     protected function publishVueAssets($version)
     {
         $this->info('Publishing Video Conference Vue Assets...');
+        $this->callSilent('vendor:publish', [
+            '--tag' => 'videoconference-vue-force',
+            '--force' => true,
+        ]);
         $this->callSilent('vendor:publish', ['--tag' => 'videoconference-vue']);
 
         if ($version == 'Vue2') {
-            $this->callSilent('vendor:publish', ['--tag' => 'videoconference-vue2']);
+            $this->callSilent('vendor:publish', [
+                '--tag' => 'videoconference-vue2',
+                '--force' => true,
+            ]);
         } else {
-            $this->callSilent('vendor:publish', ['--tag' => 'videoconference-vue3']);
+            $this->callSilent('vendor:publish', [
+                '--tag' => 'videoconference-vue3',
+                '--force' => true,
+            ]);
         }
     }
 
@@ -48,7 +58,10 @@ class ProcessCommand extends Command
     {
         if (!file_exists(config_path('video-conference.php'))) {
             $this->info('Create Video Conference Configs...');
-            $this->callSilent('vendor:publish', ['--tag' => 'videoconference-config']);
+            $this->callSilent('vendor:publish', [
+                '--tag' => 'videoconference-config',
+                '--force' => true,
+            ]);
         }
     }
 
@@ -56,7 +69,10 @@ class ProcessCommand extends Command
     {
         if (!file_exists(app_path('Http/Middleware/VideoConferenceAuthorize.php'))) {
             $this->info('Create Video Conference Middleware...');
-            $this->callSilent('vendor:publish', ['--tag' => 'videoconference-middleware']);
+            $this->callSilent('vendor:publish', [
+                '--tag' => 'videoconference-middleware',
+                '--force' => true,
+            ]);
         }
     }
 

@@ -50,14 +50,12 @@ class VideoConferenceServiceProvider extends ServiceProvider
             __DIR__.'/../resources/js/components/webrtc/RoomCreate.vue' => resource_path('js/components/webrtc/RoomCreate.vue'),
             __DIR__.'/../resources/js/components/webrtc/RoomsList.vue' => resource_path('js/components/webrtc/RoomsList.vue'),
             __DIR__.'/../resources/js/components/webrtc/RoomJoin.vue' => resource_path('js/components/webrtc/RoomJoin.vue'),
-            __DIR__.'/../resources/js/components/webrtc/VideoConferenceActions.vue' => resource_path('js/components/webrtc/VideoConferenceActions.vue'),
             __DIR__.'/../resources/js/components/webrtc/actions/AlertAction.vue' => resource_path('js/components/webrtc/actions/AlertAction.vue'),
             __DIR__.'/../resources/js/components/webrtc/actions/BanAction.vue' => resource_path('js/components/webrtc/actions/BanAction.vue'),
             __DIR__.'/../resources/js/components/webrtc/actions/InfoAction.vue' => resource_path('js/components/webrtc/actions/InfoAction.vue'),
             __DIR__.'/../resources/js/components/webrtc/actions/MultiAction.vue' => resource_path('js/components/webrtc/actions/MultiAction.vue'),
             __DIR__.'/../resources/js/components/webrtc/actions/TerminateAction.vue' => resource_path('js/components/webrtc/actions/TerminateAction.vue'),
             __DIR__.'/../resources/js/components/webrtc/themes/DefaultVideoConference.vue' => resource_path('js/components/webrtc/themes/DefaultVideoConference.vue'),
-            __DIR__.'/../resources/js/configs/webRTCsocket.js' => resource_path('js/configs/webRTCsocket.js'),
             __DIR__.'/../resources/js/router/webrtc.js' => resource_path('js/router/webrtc.js'),
             __DIR__.'/../resources/js/utils/WebRTC/actions/AlertAction.js' => resource_path('js/utils/WebRTC/actions/AlertAction.js'),
             __DIR__.'/../resources/js/utils/WebRTC/actions/BanAction.js' => resource_path('js/utils/WebRTC/actions/BanAction.js'),
@@ -71,6 +69,11 @@ class VideoConferenceServiceProvider extends ServiceProvider
             __DIR__.'/../resources/js/utils/WebRTC/Socket.js' => resource_path('js/utils/WebRTC/Socket.js'),
             __DIR__.'/../resources/js/utils/WebRTC/WebRTC.js' => resource_path('js/utils/WebRTC/WebRTC.js'),
             __DIR__.'/../resources/js/utils/WebRTC/webRTCHelper.js' => resource_path('js/utils/WebRTC/webRTCHelper.js'),
+            __DIR__.'/../resources/js/configs/webRTCsocket.js' => resource_path('js/configs/webRTCsocket.js'),
+        ], 'videoconference-vue-force');
+
+        $this->publishes([
+            __DIR__.'/../resources/js/components/webrtc/VideoConferenceActions.vue' => resource_path('js/components/webrtc/VideoConferenceActions.vue'),
         ], 'videoconference-vue');
     }
 

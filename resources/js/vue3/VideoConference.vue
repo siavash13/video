@@ -27,6 +27,7 @@
 <script>
 import { inject, shallowRef } from "vue";
 import VideoConferenceActions from "./VideoConferenceActions";
+import webRTCsocket from "../../configs/webRTCsocket";
 
 export default {
   name: "VideoConference",
@@ -50,7 +51,7 @@ export default {
       userSettings: {
         isCreator: false,
       },
-      theme: 'Default',
+      theme: webRTCsocket.videoconference_theme,
       themeReady: false,
       themeLayout: shallowRef(null),
     }
