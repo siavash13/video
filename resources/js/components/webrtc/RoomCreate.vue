@@ -12,14 +12,23 @@
       </div>
       <div>
         <label>Start Time:</label>
-        <input type="text" v-model="room.start_time"/>
+        <input
+            type="datetime-local"
+            v-model="room.start_time"
+            :min="roomMinTime"
+        />
       </div>
       <div>
         <label>End Time:</label>
-        <input type="text" v-model="room.end_time"/>
+        <input
+            type="datetime-local"
+            v-model="room.end_time"
+            :min="room.start_time"
+        />
       </div>
       <div>
-        <input type="submit" value="Create Room"/>
+        <input v-if="!loading" type="submit" value="Create Room"/>
+        <span v-else>Please wait ...</span>
       </div>
     </form>
 
@@ -32,9 +41,13 @@
 <script>
 import socketConfig from "../../configs/webRTCsocket";
 
+
 export default {
   name: "RoomCreate",
   props: ['token'],
+  created() {
+    this.setRoomStartEndTime();
+  },
   computed: {
     baseUrl() {
       return socketConfig.webrtc_url + '/api/rooms';
@@ -42,12 +55,14 @@ export default {
   },
   data() {
     return {
+      loading: false,
       room: {
         name: null,
         moderator: 'moderator',
         start_time: '2022-08-06 08:30:00',
         end_time: '2022-08-06 08:31:00',
       },
+      roomMinTime: '2022-08-06 08:30:00',
       message: {
         status: false,
         text: '',
@@ -70,6 +85,8 @@ export default {
         return false;
       }
 
+      this.loading = true;
+
       axios.post(this.baseUrl, this.room, {
         headers: headers
       }).then(response => {
@@ -79,9 +96,25 @@ export default {
         this.message.color = 'red';
         this.message.text = 'Error happened! ' + error.response.data.message;
       }).finally(() => {
+        this.loading = false;
         this.message.status = true;
       });
     },
+    setRoomStartEndTime() {
+      this.roomMinTime = this.setDateTimeFormat();
+      this.room.start_time = this.setDateTimeFormat(1);
+      this.room.end_time = this.setDateTimeFormat(10);
+    },
+    setDateTimeFormat(minutes = 0) {
+      let dateTime = null;
+      let dateObject = new Date(Date.now());
+
+      dateObject.setDate(dateObject.getDay() + 2);
+      dateObject.setMinutes(dateObject.getMinutes() + minutes);
+      dateTime = dateObject.toISOString();
+
+      return dateTime.substring(0, dateTime.indexOf("T") + 6);
+    }
   },
 }
 </script>
