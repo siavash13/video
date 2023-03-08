@@ -9,6 +9,7 @@ module.exports = () => {
   Room.setup = (parent, videoReference) => {
     this.parent = parent;
     this.videoRef = videoReference;
+    this.actions = [];
   }
 
   /**
@@ -41,12 +42,24 @@ module.exports = () => {
   Room.runRequestedAction = (action) => {
     let _actionName = action.name.toLowerCase();
     _actionName = _actionName.charAt(0).toUpperCase() + _actionName.slice(1);
+    let index = this.actions.findIndex(x => x.name === _actionName);
 
     try {
-      const actionItem = require('../actions/' + _actionName + 'Action');
-      actionItem().run(this.parent, action);
+      let actionItem;
+
+      if(index > -1) {
+        actionItem = this.actions[index].item;
+      } else {
+        actionItem = require('../actions/' + _actionName + 'Action')();
+        this.actions.push({
+          name: _actionName,
+          item: actionItem
+        });
+      }
+
+      actionItem.run(this.parent, action);
     } catch (error) {
-      console.log('action not find!');
+      console.log('action run failed!');
     }
   }
 

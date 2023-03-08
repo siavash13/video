@@ -5,24 +5,25 @@
     </div>
     <div class="room-actions">
       <a
-        class="action-item"
-        @click.prevent="runAction('terminate')"
+          v-if="userSettings.isCreator"
+          class="action-item"
+          @click.prevent="runAction('terminate')"
       >
         (Terminate)
       </a>
       <a
-        class="action-item"
-        @click.prevent="runAction('info')"
+          class="action-item"
+          @click.prevent="runAction('info')"
       >
         (Info Log)
       </a>
     </div>
     <div
-      id="video-conference-users"
-      :class="{ 'two-user-joined': (connections.length <= 1), 'multi-user-joined': (connections.length > 1)}"
+        id="video-conference-users"
+        :class="{ 'two-user-joined': (connections.length <= 1), 'multi-user-joined': (connections.length > 1)}"
     >
       <div
-        :class="{ 'room-creator': userSettings.isCreator , 'room-user': !userSettings.isCreator }"
+          :class="{ 'room-creator': userSettings.isCreator , 'room-user': !userSettings.isCreator }"
       >
         <div class="room-item">
           <div class="user-actions"></div>
@@ -33,33 +34,33 @@
       </div>
 
       <div
-        v-for="(connection, index) in connections"
-        :key="'connection_' + index"
-        :class="{ 'room-creator': connection.isCreator , 'room-user': !connection.isCreator }"
+          v-for="(connection, index) in connections"
+          :key="'connection_' + index"
+          :class="{ 'room-creator': connection.isCreator , 'room-user': !connection.isCreator }"
       >
         <div class="room-item">
           <div class="user-name" v-text="connection.name"></div>
           <div class="user-actions">
             <a
-              v-if="userSettings.isCreator"
-              class="ban-user"
-              @click.prevent="runAction('ban', {
+                v-if="userSettings.isCreator"
+                class="ban-user"
+                @click.prevent="runAction('ban', {
                 peerJsId: connection.peerJsId
               })"
             >
               (Ban)
             </a>
             <a
-              class="alert-user"
-              @click.prevent="runAction('alert', {
+                class="alert-user"
+                @click.prevent="runAction('alert', {
                 peerJsId: connection.peerJsId
               })"
             >
               (Alert)
             </a>
             <a
-              v-if="userSettings.isCreator"
-              @click.prevent="runAction('multi', {
+                v-if="userSettings.isCreator"
+                @click.prevent="runAction('multi', {
                 peerJsId: connection.peerJsId
               })"
             >
@@ -102,6 +103,11 @@ export default {
   display: flex;
   flex-wrap: wrap;
   width: 100%;
+
+  @media (min-width: 960px) {
+    width: 60%;
+    margin: auto;
+  }
 
   &.two-user-joined {
     flex-wrap: nowrap;
@@ -194,5 +200,9 @@ export default {
       }
     }
   }
+}
+
+.action-item {
+  cursor: pointer;
 }
 </style>

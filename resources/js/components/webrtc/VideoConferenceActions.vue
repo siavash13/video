@@ -36,7 +36,7 @@ import MultiAction from "./actions/MultiAction";
 
 export default {
   name: "VideoConferenceActions",
-  props: ['room', 'webrtc'],
+  props: ['room', 'webrtc', 'connections', 'userSettings'],
   methods: {
     runAction(action) {
       const actionRefName = 'actions[' + action.name + ']';

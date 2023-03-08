@@ -19,6 +19,8 @@
         ref="actions"
         :room="room"
         :webrtc="webrtc"
+        :connections="connections"
+        :userSettings="userSettings"
     />
 
   </div>
@@ -161,8 +163,7 @@ export default {
       return _text.charAt(0).toUpperCase() + _text.slice(1);
     },
     runAction(action) {
-      const actionRefName = 'actions[' + action.name + ']';
-      this.$refs[actionRefName].run(this.room, action.data || {});
+      this.$refs.actions.runAction(action);
     },
     banInRoom(data) {
       alert('you are ban! :))))');
