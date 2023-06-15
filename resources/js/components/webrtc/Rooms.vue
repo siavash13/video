@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="webrtc">
     <div v-if="!!token" id="rooms-section">
         <RoomCreate
             :token="token"
@@ -13,8 +13,9 @@
       <h2>Please Wait{{ waitingDots }}</h2>
       <p>Connecting to the server to get a user authorization token.</p>
     </div>
-    <div v-else class="error">
-      {{ this.error }}
+    <div v-else class="server-error error">
+      {{ error }}
+      <div>Please <a href="#" @click.prevent="getUserAccessToken">try again</a> later.</div>
     </div>
   </div>
 </template>
@@ -40,10 +41,14 @@ export default {
   },
   methods: {
     getUserAccessToken() {
+      this.error = null;
       this.interval = setInterval(this.setWaitingDots, 500);
 
       this.webrtcGetUserToken((token) => {
         this.token = token;
+      }, (error) => {
+        this.error = error;
+      }).finally(() => {
         clearInterval(this.interval);
       });
     },
@@ -71,8 +76,11 @@ export default {
     justify-content: space-around;
     text-align: center;
 
-    .error {
-      color: red;
+    @media screen and (max-width: 480px) {
+      flex-direction: column;
     }
+  }
+  .server-error {
+    color: red;
   }
 </style>

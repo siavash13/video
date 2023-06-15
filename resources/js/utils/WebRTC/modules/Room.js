@@ -4,6 +4,7 @@ module.exports = () => {
     parent: null,
     information: null,
     videoRef: null,
+    actions: [],
   };
 
   Room.setup = (parent, videoReference) => {
@@ -17,10 +18,16 @@ module.exports = () => {
    */
   Room.join = (roomId, userData) => {
     let data = Object.assign({ peerJsId: this.parent.peerJsId, }, userData)
-
     this.parent.socket.emit('join-room', roomId, data);
-    let videoRef = document.querySelector(this.videoRef);
-    this.parent.Media.stream(videoRef, this.parent.Media.userMedia, true);
+  }
+
+  /**
+   * User notify to server join room successfully
+   */
+  Room.notifyJoinSuccess = (roomId) => {
+    this.parent.socket.emit('join-room-successfully', roomId, {
+      peerJsId: this.parent.peerJsId
+    });
   }
 
   /**
@@ -60,6 +67,7 @@ module.exports = () => {
       actionItem.run(this.parent, action);
     } catch (error) {
       console.log('action run failed!');
+      console.log(error);
     }
   }
 

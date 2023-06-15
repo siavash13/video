@@ -8,7 +8,7 @@
       <table v-if="showRooms && !loading">
         <thead>
         <tr>
-          <th>ID</th>
+          <th>Room ID</th>
           <th>Start Date</th>
         </tr>
         </thead>
@@ -22,7 +22,7 @@
               {{ room._id }}
             </router-link>
           </td>
-          <td>{{ room.start_time }}</td>
+          <td>{{ room.start_time.split('T')[0] }}</td>
         </tr>
         </tbody>
         <tbody v-else>
@@ -109,13 +109,14 @@ export default {
 
 <style lang="scss">
 #rooms-list {
-  width: 450px;
+  width: 100%;
   display: inline-block;
   padding: 10px;
   margin: 0 0 0 50px;
   border: 1px dashed #718096;
 
   @media (max-width: 768px) {
+    width: unset;
     margin: 0;
   }
 
@@ -127,7 +128,7 @@ export default {
       width: 100%;
       border-collapse: collapse;
 
-      thed {
+      thead {
         th {
           text-align: center;
           border: 1px solid #ccc;

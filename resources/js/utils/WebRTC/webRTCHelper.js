@@ -15,11 +15,15 @@ export default {
     }
   },
   methods: {
-    async webrtcGetUserToken(next) {
-      if (!this.webrtcToken || !this.webrtcToken.token || this.webrtcToken.expired < Date.now()) {
-        await this.webrtcReGenerateUserToken();
+    async webrtcGetUserToken(next, error) {
+      try {
+        if (!this.webrtcToken || !this.webrtcToken.token || this.webrtcToken.expired < Date.now()) {
+          await this.webrtcReGenerateUserToken();
+        }
+        next(this.webrtcToken.token);
+      } catch(err) {
+        error(err);
       }
-      next(this.webrtcToken.token);
     },
     async webrtcForceGetUserToken(next) {
       await this.webrtcReGenerateUserToken();

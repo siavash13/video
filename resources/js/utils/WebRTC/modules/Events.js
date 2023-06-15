@@ -11,9 +11,12 @@ module.exports = () => {
   }
 
   Events.listen = () => {
-    this.socket.on('user-connected', (data) => {
-      this.parent.connectToNewUser(data);
-      this.parent.callbackAction('joinRoom', data, 'user join room.');
+    this.socket.on('connect-room-success', (data) => {
+      const event = new CustomEvent('onConnectToRoomSuccess', {
+        detail: data
+      });
+
+      window.dispatchEvent(event);
     });
 
     this.socket.on('room-information', (data) => {
@@ -21,14 +24,24 @@ module.exports = () => {
 
       let index = data.users.findIndex(x => x.peerJsId === this.parent.peerJsId);
 
-      if(data.users[index].roomCreator) {
-        this.parent.userSettings['isCreator'] = true;
+      if(index > -1 && data.users[index].hasOwnProperty('roomCreator')) {
+        this.parent.userSettings['isCreator'] = data.users[index].roomCreator;
       }
+    });
+
+    this.socket.on('user-connected', (data) => {
+      this.parent.connectToNewUser(data);
+      this.parent.callbackAction('joinRoom', data, 'user join room.');
     });
 
     this.socket.on('user-left-room', (data) => {
       this.parent.People.remove(data);
       this.parent.callbackAction('leftRoom', data, 'user left room.');
+    });
+
+    this.socket.on('user-disconnected', (data) => {
+      this.parent.People.remove(data);
+      this.parent.callbackAction('leftRoom', data, 'user disconnected.');
     });
 
     this.socket.on('room-id-invalid', () => {

@@ -6,7 +6,7 @@
     <div v-else v-show="!initializeVideo">
       <label>Name:</label>
       <input type="text" v-model="name" />
-      <button :disabled="!name" @click="joinToRoom">Join Room</button>
+      <button :disabled="!name" class="mx-2" @click="joinToRoom">Join Room</button>
     </div>
     <div v-show="initializeVideo">
       <VideoConference

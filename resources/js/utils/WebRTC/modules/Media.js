@@ -8,6 +8,10 @@ module.exports = () => {
 
   Media.setup = (parent, reference) => {
     this.parent = parent;
+    this.events = {
+      play: [],
+    };
+    this.userMedia = null;
     this.videoReference = reference;
   }
 
@@ -55,6 +59,38 @@ module.exports = () => {
     video.addEventListener('loadedmetadata', () => {
       video.play();
     });
+
+    video.addEventListener('play', () => {
+      Media.events.play.forEach((item) => {
+        if(!item.handler) return false;
+        item.handler(video);
+      });
+    });
+  }
+
+  /**
+   * Stream user media
+   */
+  Media.streamUserMedia = () => {
+    let videoRef = document.querySelector(this.videoReference);
+    Media.stream(videoRef, Media.userMedia, true);
+  }
+
+  Media.setEvent = (name = 'none', handler = () => {}, section = 'play') => {
+    if (!Media.hasOwnProperty('events')) Media.events = {};
+    if (!Media.events.hasOwnProperty(section)) Media.events[section] = [];
+
+    let index = Media.events[section].findIndex(x => x.name === name);
+    let item  = {
+      name: name,
+      handler: handler
+    };
+
+    if (index > -1) {
+      Media.events[section][index] = item;
+    } else {
+      Media.events[section].push(item);
+    }
   }
 
   return Media;

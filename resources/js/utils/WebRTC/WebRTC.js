@@ -71,16 +71,10 @@ class Webrtc
    * Start PeerJs Connection
    */
   async initialPeerJs() {
-    return new Promise((resolve, reject) => {
-      this.peerJsObject = new PeerJs();
-      this.peerJs = this.peerJsObject.videoPeer;
-
-      this.Media.grab().then((media) => {
-        this.peerJs.on('call', async call => {
-          await this.People.add(call);
-          call.answer(media);
-        });
-
+    return new Promise(async (resolve) => {
+      await new PeerJs().then((peerJsObject) => {
+        this.peerJsObject = peerJsObject;
+        this.peerJs = this.peerJsObject.videoPeer;
         this.peerJsId = this.peerJsObject.getId();
 
         resolve(this.peerJsId);
@@ -89,11 +83,30 @@ class Webrtc
   }
 
   /**
+   * Start grab user media and stream
+   */
+  startStreamUserMedia() {
+    return new Promise((resolve) => {
+      this.Media.grab().then((media) => {
+        this.peerJs.on('call', async (call) => {
+          await this.People.add(call);
+          console.log(media);
+          call.answer(media);
+        });
+
+        this.userSettings.peerJsId = this.peerJsId;
+        this.Media.streamUserMedia();
+        resolve(true);
+      });
+    });
+
+  }
+
+  /**
    * Connect To New Joined User
    */
   async connectToNewUser(data) {
     const call = this.peerJs.call(data.peerJsId, this.Media.userMedia);
-
     await this.People.add(call, data);
 
     call.on('close', () => {
@@ -104,6 +117,9 @@ class Webrtc
     });
   }
 
+  /**
+   * Request to run user action
+   */
   runAction(roomId, action) {
     this.socket.emit('run-room-action', roomId, action);
   }

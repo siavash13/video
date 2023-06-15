@@ -12,6 +12,13 @@
         (Terminate)
       </a>
       <a
+        v-if="userSettings.isCreator"
+        class="action-item"
+        @click.prevent="runAction('canvastext')"
+      >
+        (Canvas Teleprompter)
+      </a>
+      <a
         class="action-item"
         @click.prevent="runAction('info')"
       >
@@ -78,8 +85,9 @@
 </template>
 
 <script>
+
 export default {
-  name: "DefaultVideoConference",
+  name: "CanvasVideoConference",
   props: ['connections', 'userSettings'],
   data() {
     return {}
@@ -93,7 +101,15 @@ export default {
         name: name,
         data: data
       });
+    },
+    clearAllIntervals() {
+      for (let i = 1; i < 99999; i++)
+        window.clearInterval(i);
     }
+  },
+  unmounted() {
+    // clear canvas text render interval
+    this.clearAllIntervals();
   }
 }
 </script>
@@ -199,6 +215,10 @@ export default {
         object-fit: cover;
       }
     }
+  }
+
+  canvas {
+    position: absolute;
   }
 }
 

@@ -1,5 +1,5 @@
 <template>
-<div>
+<div id="videoConferenceActions">
   <BanAction
     ref="actions[ban]"
     :webrtc="webrtc"
@@ -24,6 +24,21 @@
     ref="actions[multi]"
     :webrtc="webrtc"
   />
+
+  <CanvastextAction
+    ref="actions[canvastext]"
+    :room="room"
+    :webrtc="webrtc"
+    :userSettings="userSettings"
+  />
+
+  <FaceApiAction
+    ref="actions[faceapi]"
+    :room="room"
+    :webrtc="webrtc"
+    :userSettings="userSettings"
+  />
+
 </div>
 </template>
 
@@ -33,6 +48,8 @@ import BanAction from "./actions/BanAction";
 import TerminateAction from "./actions/TerminateAction";
 import AlertAction from "./actions/AlertAction";
 import MultiAction from "./actions/MultiAction";
+import CanvastextAction from "./actions/CanvastextAction";
+import FaceApiAction from "./actions/FaceApiAction";
 
 export default {
   name: "VideoConferenceActions",
@@ -49,6 +66,17 @@ export default {
     TerminateAction,
     AlertAction,
     MultiAction,
+    CanvastextAction,
+    FaceApiAction,
   }
 }
 </script>
+
+<style lang="scss">
+#videoConferenceActions {
+  position: fixed;
+  z-index: 99999;
+  width: 100%;
+  height: 100vh;
+}
+</style>

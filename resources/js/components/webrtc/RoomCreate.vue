@@ -32,7 +32,7 @@
       </div>
     </form>
 
-    <div v-if="message.status" :style="{ color:message.color }">
+    <div v-if="message.status" :class="message.type">
       {{ message.text }}
     </div>
   </div>
@@ -66,7 +66,7 @@ export default {
       message: {
         status: false,
         text: '',
-        color: 'green'
+        type: 'success'
       }
     }
   },
@@ -79,7 +79,7 @@ export default {
       };
 
       if (!(this.room.name && this.room.moderator && this.room.start_time && this.room.end_time)) {
-        this.message.color = 'red';
+        this.message.type = 'error';
         this.message.text = 'Please fill all required fields.';
         this.message.status = true;
         return false;
@@ -90,10 +90,10 @@ export default {
       axios.post(this.baseUrl, this.room, {
         headers: headers
       }).then(response => {
-        this.message.color = 'green';
+        this.message.type = 'success';
         this.message.text = 'Room created successfully! Room Id is: ' + response.data.room.id;
       }, error => {
-        this.message.color = 'red';
+        this.message.type = 'error';
         this.message.text = 'Error happened! ' + error.response.data.message;
       }).finally(() => {
         this.loading = false;
@@ -121,13 +121,14 @@ export default {
 
 <style lang="scss">
 #room-register {
-  width: 450px;
+  width: 100%;
   display: inline-block;
   padding: 10px;
   margin: 0 50px 0 0;
   border: 1px dashed #718096;
 
   @media (max-width: 768px) {
+    width: unset;
     margin: 0 0 50px 0;
   }
 

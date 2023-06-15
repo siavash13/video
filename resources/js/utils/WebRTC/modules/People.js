@@ -36,8 +36,8 @@ module.exports = () => {
       }
 
       call.on('stream', peerVideoStream => {
-        let peerRef = document.querySelectorAll(this.usersReference);
-        this.parent.Media.stream(peerRef[(count - 1)], peerVideoStream);
+        let peerRef = document.querySelector(this.usersReference+'-'+call.peer);
+        this.parent.Media.stream(peerRef, peerVideoStream);
       });
 
       return (count - 1);
@@ -61,6 +61,10 @@ module.exports = () => {
     });
 
     this.connections = [];
+  }
+
+  People.getConnections = () => {
+    return this.connections;
   }
 
   return People;
