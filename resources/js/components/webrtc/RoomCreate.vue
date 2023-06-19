@@ -136,7 +136,7 @@ export default {
     margin-bottom: 20px;
 
     label {
-      width: 150px;
+      width: 120px;
       display: inline-block;
     }
 

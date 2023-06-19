@@ -1,10 +1,14 @@
 <template>
   <div id="rooms-list">
+    <h2>Rooms List</h2>
     <div class="rooms-list-table">
-      <span v-if="!loading" @click="getRoomsList">
-        Get Rooms List
+      <span
+        class="btn btn-small btn-info"
+        :class="{ disabled : loading }"
+        @click="getRoomsList"
+      >
+        {{ (!loading)? 'Get Rooms List' : 'Please Wait ...' }}
       </span>
-      <span v-else>Please Wait ...</span>
       <table v-if="showRooms && !loading">
         <thead>
         <tr>
@@ -16,13 +20,14 @@
         <tr
           v-for="(room, index) in rooms"
           :key="'room_' + index"
+          @click="joinRoom(room._id)"
         >
           <td>
-            <router-link :to="{ name: 'webrtcJoinRoom', params: { roomId: room._id }}">
-              {{ room._id }}
-            </router-link>
+            {{ room._id }}
           </td>
-          <td>{{ room.start_time.split('T')[0] }}</td>
+          <td class="text-center">
+            {{ room.start_time.split('T')[0] }}
+          </td>
         </tr>
         </tbody>
         <tbody v-else>
@@ -69,23 +74,14 @@ export default {
     }
   },
   methods: {
-    joinRoom(e) {
-      e.preventDefault();
-      this.message.status = false;
-
-      if (!this.room.id) {
-        this.message.color = 'red';
-        this.message.text = 'Please enter room id.';
-        this.message.status = true;
-        return false;
-      }
-
-      this.$emit('onRoomJoin', this.room);
+    joinRoom(roomId) {
+      this.$router.push({
+        name: 'webrtcJoinRoom',
+        params: { roomId: roomId }
+      });
     },
     getRoomsList() {
-      this.showRooms = !this.showRooms;
-
-      if (!this.showRooms) {
+      if (this.loading) {
         return;
       }
 
@@ -101,6 +97,7 @@ export default {
         this.rooms = response.data.rooms;
       }).finally(() => {
         this.loading = false;
+        this.showRooms = true;
       });
     },
   },
@@ -126,10 +123,12 @@ export default {
 
     table {
       width: 100%;
+      margin-top: 15px;
       border-collapse: collapse;
 
       thead {
         th {
+          font-size: .9em;
           text-align: center;
           border: 1px solid #ccc;
           padding: 2px;

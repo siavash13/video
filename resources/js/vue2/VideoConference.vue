@@ -1,21 +1,5 @@
 <template>
   <div id="video-conference">
-    <div v-show="!roomIsValid" class="error">
-      The desired room was not found! Please try to connect to an available room.
-      <a href="#" @click.prevent="leftTheRoom()">Back</a>
-    </div>
-
-    <div
-        v-if="loading"
-        v-show="roomIsValid"
-    >
-      <p v-show="!connectionFailed">Please wait for establishing a connection...</p>
-      <p v-show="connectionFailed">
-        Sorry! apparently server doesn't respond, please try again.<br/>
-        <a href="#" @click.prevent="startEstablishingConnection">Try Again</a>
-      </p>
-    </div>
-
     <component
         v-if="themeReady && isReady"
         v-show="roomIsValid"
@@ -34,7 +18,6 @@
         :connections="connections"
         :userSettings="userSettings"
     />
-
   </div>
 </template>
 
@@ -124,7 +107,11 @@ export default {
         });
 
         try {
-          this.startEstablishingConnection();
+          this.$webrtc.initialPeerJs().then(async (peerJsId) => {
+            this.startEstablishingConnection();
+          }).catch((error) => {
+            this.$emit('onPeerJsConnectionFailed');
+          });
         } catch (error) {
           console.log('webrtc initialize error:');
           console.log(error);
@@ -141,7 +128,7 @@ export default {
         return;
       }
 
-      this.webrtc.Room.join(this.room.id, {
+      this.$webrtc.Room.join(this.room.id, {
         name: this.name
       });
 
@@ -172,6 +159,7 @@ export default {
     },
     invalidRoom() {
       this.roomIsValid = false;
+	    this.$emit('onAuthorizeRoomInvalid');
     },
     async setThemeLayout() {
       let theme = null;
@@ -179,7 +167,7 @@ export default {
 
       try {
         theme = await this.loadThemeLayout(themeName);
-      } catch (error) {
+      } catch(error) {
         theme = await this.loadThemeLayout('Default');
       }
 
@@ -204,13 +192,12 @@ export default {
     eventHandlerConnectToRoomSuccess(data) {
       this.loading = false;
       this.isReady = true;
+	  
+	    this.$emit('onConnectionInitialed', data.detail);
 
-      // data.detail
       this.$nextTick(async () => {
-        this.webrtc.initialPeerJs().then(async (peerJsId) => {
-          await this.webrtc.startStreamUserMedia();
-          this.webrtc.Room.notifyJoinSuccess(this.room.id);
-        });
+	    await this.$webrtc.startStreamUserMedia();
+		  this.$webrtc.Room.notifyJoinSuccess(this.room.id);
       });
     }
   },

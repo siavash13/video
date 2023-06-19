@@ -19,6 +19,7 @@
   --secondery-dark: #a3b6c1;
   --danger: #EB6440;
   --success: #8fb774;
+  --white: #fff;
   --gray: #ccc;
   --blue-gray: #c4cbcf;
   --blue-gray-light: #ecf3f7;
@@ -32,7 +33,8 @@
   --red-dark: #ba3918;
   --red-light: #e5907a;
   --red-lighter: #ffc0af;
-  --blue: #00C4FF;
+  --red-text: #f5dad2;
+  --blue: #bcf0ff;
   --blue-dark: #0a7598;
   --blue-light: #9ce2ff;
   --blue-lighter: #d7f4ff;
@@ -64,6 +66,8 @@ a {
 }
 
 label {
+  display: inline-block;
+  width: 120px;
   text-align: left;
 }
 
@@ -97,6 +101,7 @@ input[type=submit] {
     color: var(--purple-dark);
   }
 
+  &.disabled,
   &:disabled {
     color: var(--purple-light);
     border: 2px dashed var(--purple-light);
@@ -104,21 +109,22 @@ input[type=submit] {
   }
 
   &.btn-small {
-    border: 0;
-    border-radius: 5px;
-    padding: 2px 5px;
+    font-size: .9em;
+    border-radius: 45px;
+    padding: 2px 15px;
   }
 }
 
 .btn-danger {
-  color: var(--red-dark);
+  color: var(--red-text);
   border: 2px dashed var(--red-dark);
   background: var(--red);
 
   &:hover {
-    color: var(--red-dark);
+    color: var(--white);
   }
 
+  &.disabled,
   &:disabled {
     color: var(--red-light);
     border: 2px dashed var(--red-light);
@@ -127,14 +133,16 @@ input[type=submit] {
 }
 
 .btn-info {
-  color: var(--blue-dark);
-  border: 2px dashed var(--blue-dark);
+  color: var(--primary);
+  border: 2px dashed var(--primary);
   background: var(--blue);
 
   &:hover {
+    border: 2px dashed var(--blue-dark);
     color: var(--blue-dark);
   }
 
+  &.disabled,
   &:disabled {
     color: var(--blue-light);
     border: 2px dashed var(--blue-light);
@@ -258,6 +266,10 @@ table {
 
 .success {
   color: var(--success);
+}
+
+.text-center {
+  text-align: center;
 }
 
 #webrtc {

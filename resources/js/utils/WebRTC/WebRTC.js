@@ -71,14 +71,18 @@ class Webrtc
    * Start PeerJs Connection
    */
   async initialPeerJs() {
-    return new Promise(async (resolve) => {
-      await new PeerJs().then((peerJsObject) => {
-        this.peerJsObject = peerJsObject;
-        this.peerJs = this.peerJsObject.videoPeer;
-        this.peerJsId = this.peerJsObject.getId();
+    return new Promise(async (resolve, reject) => {
+      try {
+        await new PeerJs().then((peerJsObject) => {
+          this.peerJsObject = peerJsObject;
+          this.peerJs = this.peerJsObject.videoPeer;
+          this.peerJsId = this.peerJsObject.getId();
 
-        resolve(this.peerJsId);
-      });
+          resolve(this.peerJsId);
+        });
+      } catch(error) {
+        reject(error);
+      }
     });
   }
 
@@ -86,20 +90,23 @@ class Webrtc
    * Start grab user media and stream
    */
   startStreamUserMedia() {
-    return new Promise((resolve) => {
-      this.Media.grab().then((media) => {
-        this.peerJs.on('call', async (call) => {
-          await this.People.add(call);
-          console.log(media);
-          call.answer(media);
+    return new Promise((resolve, reject) => {
+      try {
+        this.Media.grab().then((media) => {
+          this.peerJs.on('call', async (call) => {
+            await this.People.add(call);
+            console.log(media);
+            call.answer(media);
+          });
+
+          this.userSettings.peerJsId = this.peerJsId;
+          this.Media.streamUserMedia();
+          resolve(true);
         });
-
-        this.userSettings.peerJsId = this.peerJsId;
-        this.Media.streamUserMedia();
-        resolve(true);
-      });
+      } catch(error) {
+        reject(error);
+      }
     });
-
   }
 
   /**

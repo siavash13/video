@@ -1,20 +1,56 @@
 <template>
-  <div id="room-join">
-    <div v-if="!token">
-      Wait for user authorization token...
+  <div style="padding:10px;" v-if="!initializeVideo">
+    <div id="room-join">
+      <div v-if="!token">
+        Wait for user authorization token...
+      </div>
+      <div v-else-if="!startConnecting">
+        <label>Name:</label>
+        <input
+          type="text"
+          v-model="name"
+        />
+        <button
+          :disabled="!name"
+          class="btn-join mx-2"
+          @click="joinToRoom"
+        >
+          Join Room
+        </button>
+      </div>
+      <div v-else>
+        <div v-if="roomIsValid">
+          <p v-if="!connectionFailed">Please wait for establishing a connection...</p>
+          <div v-else class="error">
+            <div v-if="peerJsFailed" >
+              Sorry! apparently server doesn't respond, please contact with administration.
+              <a href="#" @click.prevent="closeConference">Back</a>
+            </div>
+            <div v-else>
+              Sorry! apparently server doesn't respond, please try again.<br />
+              <a href="#" @click.prevent="startEstablishingConnection">Try Again</a>
+            </div>
+          </div>
+        </div>
+        <div v-else class="error">
+          The desired room was not found! Please try to connect to an available room.
+          <a href="#" @click.prevent="closeConference">Back</a>
+        </div>
+      </div>
     </div>
-    <div v-else v-show="!initializeVideo">
-      <label>Name:</label>
-      <input type="text" v-model="name" />
-      <button :disabled="!name" class="mx-2" @click="joinToRoom">Join Room</button>
-    </div>
-    <div v-show="initializeVideo">
-      <VideoConference
-        ref="conference"
-        :name="name"
-        @onCloseConference="closeConference"
-      />
-    </div>
+  </div>
+  <div
+    style="padding:10px;"
+    v-show="initializeVideo"
+  >
+    <VideoConference
+      ref="conference"
+      :name="name"
+      @onConnectionInitialed="connectionInitialed"
+      @onAuthorizeRoomInvalid="authorizeRoomInvalid"
+      @onPeerJsConnectionFailed="peerJsConnectionFailed"
+      @onCloseConference="closeConference"
+    />
   </div>
 </template>
 
@@ -45,6 +81,10 @@ export default {
         color: 'green'
       },
       loading: false,
+      startConnecting: false,
+      roomIsValid: true,
+      peerJsFailed: false,
+      connectionFailed: false,
     }
   },
   methods: {
@@ -54,11 +94,25 @@ export default {
       });
     },
     joinToRoom() {
-      this.initializeVideo = true;
+      this.startConnecting = true;
       this.$refs.conference.initialize(this.room, this.token);
+    },
+    connectionInitialed() {
+      this.connectionFailed = false;
+      this.initializeVideo = true;
+    },
+    authorizeRoomInvalid() {
+      this.roomIsValid = false;
+    },
+    peerJsConnectionFailed() {
+      this.connectionFailed = true;
+      this.peerJsFailed = true;
     },
     closeConference() {
       this.$router.push({ name: 'webrtcRooms'});
+    },
+    startEstablishingConnection() {
+      this.$refs.conference.startEstablishingConnection();
     },
   },
   components: {
@@ -69,6 +123,33 @@ export default {
 
 <style lang="scss">
 #room-join {
-  padding: 25px;
+  width: 50%;
+  margin: 25px auto;
+  border: 1px dashed #6096b4;
+
+  @media screen and (max-width: 480px) {
+    width: 100%;
+  }
+
+  div {
+    padding: 25px;
+  }
+
+  label {
+    @media screen and (max-width: 480px) {
+      width: 80px;
+    }
+  }
+
+  .btn-join {
+    margin: 0 0 0 25px;
+
+    @media screen and (max-width: 480px) {
+      position: relative;
+      left: 50%;
+      margin: 25px auto;
+      transform: translateX(-50%);
+    }
+  }
 }
 </style>
