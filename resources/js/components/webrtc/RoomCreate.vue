@@ -109,7 +109,7 @@ export default {
       let dateTime = null;
       let dateObject = new Date(Date.now());
 
-      dateObject.setDate(dateObject.getDay() + 2);
+      dateObject.setDate(dateObject.getDate() + 2);
       dateObject.setMinutes(dateObject.getMinutes() + minutes);
       dateTime = dateObject.toISOString();
 
