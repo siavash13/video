@@ -3,14 +3,16 @@ module.exports = () => {
   const Room = {
     parent: null,
     information: null,
-    videoRef: null,
+    options: null,
     actions: [],
   };
 
-  Room.setup = (parent, videoReference) => {
+  Room.setup = (parent, options) => {
     this.parent = parent;
-    this.videoRef = videoReference;
+    this.options = options;
     this.actions = [];
+
+
   }
 
   /**
@@ -47,9 +49,8 @@ module.exports = () => {
   }
 
   Room.runRequestedAction = (action) => {
-    let _actionName = action.name.toLowerCase();
-    _actionName = _actionName.charAt(0).toUpperCase() + _actionName.slice(1);
-    let index = this.actions.findIndex(x => x.name === _actionName);
+    let actionName = this.parent.kebabToCamel(action.name);
+    let index = this.actions.findIndex(x => x.name === actionName);
 
     try {
       let actionItem;
@@ -57,9 +58,9 @@ module.exports = () => {
       if(index > -1) {
         actionItem = this.actions[index].item;
       } else {
-        actionItem = require('../actions/' + _actionName + 'Action')();
+        actionItem = require('../actions/' + actionName + 'Action')();
         this.actions.push({
-          name: _actionName,
+          name: actionName,
           item: actionItem
         });
       }

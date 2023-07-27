@@ -20,8 +20,6 @@ export default {
   },
   methods: {
     run(room, data) {
-      console.log('run terminate action');
-      this.action.attributes = Object.assign(this.action.attributes, data);
       this.webrtc.runAction(room.id, this.action);
     }
   }

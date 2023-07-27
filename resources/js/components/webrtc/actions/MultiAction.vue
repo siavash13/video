@@ -12,17 +12,6 @@ export default {
   },
   methods: {
     run(room, data) {
-      this.webrtc.runAction(room.id, {
-        name: 'alert',
-        moderator: false,
-        users: [{
-          peerJsId: data.peerJsId
-        }],
-        attributes: {
-          message: 'You are ban in 5 seconds.'
-        }
-      });
-
       setTimeout(() => {
         this.webrtc.runAction(room.id, {
           name: 'ban',

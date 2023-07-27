@@ -13,7 +13,7 @@ module.exports = () => {
       parent.People.remove({
         peerJsId: data.attributes.ban.peerJsId
       }).then(() => {
-        alert('User is Ban by moderator!?');
+        // alert('User is Ban by moderator!?');
       });
     }
   }

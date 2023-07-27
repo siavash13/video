@@ -6,24 +6,41 @@
         :is="themeLayout"
         :connections="connections"
         :userSettings="userSettings"
-        @onLeftRoom="leftTheRoom"
-        @onRunAction="runAction"
-    />
+        :commands="commands"
+    >
+      <template v-slot:modules>
+        <ChatModule
+            ref="modules[chat]"
+            :webrtc="$webrtc"
+            :runAction="commands.run"
+        />
 
-    <VideoConferenceActions
-        ref="actions"
-        v-if="themeReady && isReady"
-        :room="room"
-        :webrtc="$webrtc"
-        :connections="connections"
-        :userSettings="userSettings"
-    />
+        <PeopleModule
+            ref="modules[people]"
+            :webrtc="$webrtc"
+            :runAction="commands.run"
+        />
+      </template>
+      <template v-slot:actions>
+        <VideoConferenceActions
+            ref="actions"
+            v-if="themeReady && isReady"
+            :room="room"
+            :webrtc="$webrtc"
+            :connections="connections"
+            :userSettings="userSettings"
+        />
+      </template>
+    </component>
+
   </div>
 </template>
 
 <script>
 import VideoConferenceActions from "./VideoConferenceActions";
 import webRTCsocket from "../../configs/webRTCsocket";
+import ChatModule from "./modules/ChatModule";
+import PeopleModule from "./modules/PeopleModule";
 
 export default {
   name: "VideoConference",
@@ -31,7 +48,7 @@ export default {
     await this.setThemeLayout();
     window.addEventListener('onConnectToRoomSuccess', this.eventHandlerConnectToRoomSuccess);
   },
-  props: ['name'],
+  props: ['name', 'devices', 'camDisable', 'micDisable'],
   data() {
     return {
       room: null,
@@ -50,6 +67,14 @@ export default {
       theme: webRTCsocket.videoconference_theme,
       themeReady: false,
       themeLayout: null,
+      commands: {
+        mute: (device) => { this.deviceMuteControl(device); },
+        left: () => { this.leftTheRoom() },
+        run: (name, data = {}) => {
+          this.$refs.actions.runAction({name: name, data: data });
+        },
+        open: (name) => { this.openModule(name); }
+      }
     }
   },
   methods: {
@@ -89,11 +114,18 @@ export default {
         return;
       }
 
+      this.userSettings = Object.assign({
+        camDisable: this.camDisable,
+        micDisable: this.micDisable,
+      }, this.userSettings);
+
       this.connect().then(async () => {
         this.$webrtc.setup({
           options: {
-            videoRef: '.video-content',
-            peerRef: '.peer-content',
+            name: this.name,
+            localVideoRef: 'video-item',
+            remoteVideoRef: 'remote-video',
+            remoteAudioRef: 'remote-audio',
           },
           callback: {
             joinRoom: this.userJoinRoom,
@@ -148,11 +180,20 @@ export default {
       this.$webrtc.leftRoom(this.room.id, data);
       this.exitConference();
     },
+    deviceMuteControl(device) {
+      if(device === 'camera') {
+        this.userSettings.camDisable = !this.userSettings.camDisable;
+        this.$webrtc.Media.muteCamera();
+      } else {
+        this.userSettings.micDisable = !this.userSettings.micDisable;
+        this.$webrtc.Media.muteMicrophone();
+      }
+    },
     exitConference() {
       this.$emit('onCloseConference');
     },
     userLeftRoom(data) {
-      console.log(data.username + ' left room!');
+      console.log(data?.username + ' left room!');
     },
     userJoinRoom(data) {
       console.log('user join to room: ' + data.peerJsId);
@@ -182,8 +223,9 @@ export default {
       let _text = text.toLowerCase();
       return _text.charAt(0).toUpperCase() + _text.slice(1);
     },
-    runAction(action) {
-      this.$refs.actions.runAction(action);
+    openModule(name) {
+      const moduleRefName = 'modules[' + name + ']';
+      this.$refs[moduleRefName].open(this.room);
     },
     banInRoom(data) {
       alert('you are ban! :))))');
@@ -196,8 +238,8 @@ export default {
 	    this.$emit('onConnectionInitialed', data.detail);
 
       this.$nextTick(async () => {
-	    await this.$webrtc.startStreamUserMedia();
-		  this.$webrtc.Room.notifyJoinSuccess(this.room.id);
+        await this.$webrtc.startStreamUserMedia();
+        this.$webrtc.Room.notifyJoinSuccess(this.room.id);
       });
     }
   },
@@ -207,6 +249,8 @@ export default {
         this.eventHandlerConnectToRoomSuccess);
   },
   components: {
+    ChatModule,
+    PeopleModule,
     VideoConferenceActions,
   }
 }

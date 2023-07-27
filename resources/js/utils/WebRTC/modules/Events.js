@@ -3,11 +3,13 @@ module.exports = () => {
   const Events = {
     parent: null,
     socket: null,
+    events: [],
   };
 
   Events.setup = (parent) => {
     this.parent = parent;
     this.socket = this.parent.socket;
+    this.events = [];
   }
 
   Events.listen = () => {
@@ -69,6 +71,25 @@ module.exports = () => {
     this.socket.on('info-room-data', (data) => {
       console.log(data);
     });
+  }
+
+
+  Events.addEvent = (type, event, method) => {
+    this.events.push({
+      type: type,
+      event: event,
+      method: method
+    });
+  }
+
+  Events.handler = (type, event, data = null) => {
+    let index = this.events.findIndex(x => x.type === type && x.event === event);
+
+    if (index > -1) {
+      return this.events[index]['method'](data);
+    } else {
+      console.log(type + ' type ' + event + ' event not defined.');
+    }
   }
 
   return Events;

@@ -3,29 +3,32 @@ module.exports = () => {
   const People = {
     parent: null,
     connections: null,
-    usersReference: null,
+    options: null,
   }
 
-  People.setup = (parent, connections, usersReference) => {
+  People.setup = (parent, connections, options) => {
     this.parent = parent;
     this.connections = connections;
-    this.usersReference = usersReference;
+    this.options = options;
   }
 
   /**
    * Add peer js user connection
    */
-  People.add = async (call, data = false) => {
-    let index = this.connections.findIndex(x => x.id === call.peer);
+  People.add = async (mediaConnection, dataConnection, data = false) => {
+    let index = this.connections.findIndex(x => x.id === mediaConnection.peer);
 
     if (index === -1) {
-      let userIndex = this.parent.Room.information.users.findIndex(x => x.peerJsId === call.peer);
+      let userIndex = this.parent.Room.information.users.findIndex(x => x.peerJsId === mediaConnection.peer);
 
       let count = this.connections.push({
-        id: call.peer,
-        peerJsId: call.peer,
-        call: call,
-        active: true,
+        id: mediaConnection.peer,
+        peerJsId: mediaConnection.peer,
+        mediaConnection: mediaConnection,
+        dataConnection: dataConnection,
+        active: false,
+        camMute: true,
+        micMute: true,
         name: ((userIndex !== -1)? this.parent.Room.information.users[userIndex].name : ''),
         isCreator: ((userIndex !== -1)? this.parent.Room.information.users[userIndex].roomCreator : false),
       });
@@ -35,9 +38,18 @@ module.exports = () => {
         this.connections[(count - 1)].isCreator = data.roomCreator;
       }
 
-      call.on('stream', peerVideoStream => {
-        let peerRef = document.querySelector(this.usersReference+'-'+call.peer);
-        this.parent.Media.stream(peerRef, peerVideoStream);
+      dataConnection.on('open', () => {
+        dataConnection.send({
+          event: 'muteMedia',
+          camMute: this.parent.userSettings.camDisable,
+          micMute: this.parent.userSettings.micDisable
+        });
+      });
+
+      mediaConnection.on('stream', peerVideoStream => {
+        this.parent.Media.streamVideo(mediaConnection.peer, peerVideoStream);
+        this.parent.Media.streamAudio(mediaConnection.peer, peerVideoStream);
+        this.connections[(count - 1)].active = true;
       });
 
       return (count - 1);
@@ -50,14 +62,16 @@ module.exports = () => {
     let index = this.connections.findIndex(x => x.peerJsId === data.peerJsId);
 
     if (index > -1) {
-      this.connections[index].call.close();
+      this.connections[index].mediaConnection.close();
+      this.connections[index].dataConnection.close();
       this.connections.splice(index, 1);
     }
   }
 
   People.closeAll = () => {
     this.connections.forEach((connection) => {
-      connection.call.close();
+      connection.mediaConnection.close();
+      connection.dataConnection.close();
     });
 
     this.connections = [];

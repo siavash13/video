@@ -15,7 +15,9 @@ module.exports = () => {
     this.startHeight = 60;
     this.lineHeight = 0;
     this.canvas = document.getElementById('canvas-text-scroll-section');
+    this.canvasText = document.getElementById('canvas-text');
     this.context = this.canvas.getContext('2d');
+    this.canvasText.style.display = 'block';
     this.canvas.style.display = 'block';
 
     this.canvas.width = document.getElementById("canvas-text-action-card").offsetWidth;
@@ -36,11 +38,14 @@ module.exports = () => {
   }
 
   action.run = (parent, data) => {
+
+
     if (data.attributes.play) {
-      action.setup()
+      action.setup();
       this.interval = setInterval(action.renderText, 1000 / this.intervalTime, data.attributes.message);
     } else {
       this.canvas.style.display = 'none';
+      this.canvasText.style.display = 'none';
       clearInterval(this.interval);
     }
   }

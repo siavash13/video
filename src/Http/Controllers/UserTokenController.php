@@ -33,7 +33,7 @@ class UserTokenController
                 ],
             ]);
         } catch(\Exception $error) {
-            abort(500, 'Failed to connect to server.');
+            abort(500, $error->getMessage());
         }
 
         $info = json_decode($response->getBody());

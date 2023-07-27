@@ -28,9 +28,9 @@ class Webrtc
     this.callback = Object.assign(this.callback, callback);
     this.userSettings = userSettings;
 
-    this.Media.setup(this, options.videoRef);
-    this.Room.setup(this, options.videoRef);
-    this.People.setup(this, connections, options.peerRef);
+    this.Room.setup(this, options);
+    this.Media.setup(this, options);
+    this.People.setup(this, connections, options.remoteVideoRef, options.remoteAudioRef);
   }
 
   async initial(options) {
@@ -41,6 +41,9 @@ class Webrtc
 
       this.Events.setup(this);
       this.Events.listen();
+
+      // set events
+      this.on('peerJsData', 'muteMedia', this.Media.setConnectionMediaStatus);
 
     }).catch(err => {
       console.log('error happened for webrtc initial', err);
@@ -73,7 +76,7 @@ class Webrtc
   async initialPeerJs() {
     return new Promise(async (resolve, reject) => {
       try {
-        await new PeerJs().then((peerJsObject) => {
+        await new PeerJs(this.Events).then((peerJsObject) => {
           this.peerJsObject = peerJsObject;
           this.peerJs = this.peerJsObject.videoPeer;
           this.peerJsId = this.peerJsObject.getId();
@@ -89,18 +92,22 @@ class Webrtc
   /**
    * Start grab user media and stream
    */
-  startStreamUserMedia() {
+  startStreamUserMedia(devices) {
     return new Promise((resolve, reject) => {
       try {
-        this.Media.grab().then((media) => {
-          this.peerJs.on('call', async (call) => {
-            await this.People.add(call);
-            console.log(media);
-            call.answer(media);
+        this.Media.grab(
+          devices,
+          this.userSettings.camDisable,
+          this.userSettings.micDisable,
+        ).then((media) => {
+          this.peerJs.on('call', async (mediaConnection) => {
+            const dataConnection = this.peerJs.connect(mediaConnection.peer);
+            await this.People.add(mediaConnection, dataConnection);
+            mediaConnection.answer(this.Media.userMedia);
           });
 
           this.userSettings.peerJsId = this.peerJsId;
-          this.Media.streamUserMedia();
+          this.Media.streamVideo(null, media);
           resolve(true);
         });
       } catch(error) {
@@ -113,13 +120,15 @@ class Webrtc
    * Connect To New Joined User
    */
   async connectToNewUser(data) {
-    const call = this.peerJs.call(data.peerJsId, this.Media.userMedia);
-    await this.People.add(call, data);
+    const mediaConnection = this.peerJs.call(data.peerJsId, this.Media.userMedia);
+    const dataConnection = this.peerJs.connect(data.peerJsId);
 
-    call.on('close', () => {
-      console.log('Close user...' + call.peer);
+    await this.People.add(mediaConnection, dataConnection, data);
+
+    mediaConnection.on('close', () => {
+      console.log('Close user...' + mediaConnection.peer);
     });
-    call.on('error', (error) => {
+    mediaConnection.on('error', (error) => {
       console.log('error user... ' + error);
     });
   }
@@ -130,6 +139,37 @@ class Webrtc
   runAction(roomId, action) {
     this.socket.emit('run-room-action', roomId, action);
   }
+
+  /**
+   * Define event
+   */
+  on(type, event, method) {
+    this.Events.addEvent(type, event, method);
+  }
+
+  async getDevices() {
+    return await navigator.mediaDevices.enumerateDevices().then(devices => {
+      return devices.filter(item => {
+        return item.deviceId !== 'default' && item.deviceId !== 'communications';
+      });
+    }).catch((error) => {
+      console.log(error);
+      return false;
+    });
+  }
+
+  camelToKebab(name) {
+    name = name.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
+
+    return name;
+  }
+
+  kebabToCamel(name) {
+    name = name.replace(/-[a-z]/g, m => m.slice(1).toUpperCase());
+
+    return name;
+  }
+
 }
 
 /**

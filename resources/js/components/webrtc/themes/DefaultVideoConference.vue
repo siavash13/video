@@ -11,12 +11,6 @@
       >
         (Terminate)
       </a>
-      <a
-        class="action-item"
-        @click.prevent="runAction('info')"
-      >
-        (Info Log)
-      </a>
     </div>
     <div
       id="video-conference-users"
@@ -49,14 +43,6 @@
               })"
             >
               (Ban)
-            </a>
-            <a
-              class="alert-user"
-              @click.prevent="runAction('alert', {
-                peerJsId: connection.peerJsId
-              })"
-            >
-              (Alert)
             </a>
             <a
               v-if="userSettings.isCreator"

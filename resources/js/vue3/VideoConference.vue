@@ -1,47 +1,46 @@
 <template>
   <div id="video-conference">
-    <div v-show="!roomIsValid" class="error">
-      The desired room was not found! Please try to connect to an available room.
-      <a href="#" @click.prevent="leftTheRoom()">Back</a>
-    </div>
-
-    <div
-        v-if="loading"
-        v-show="roomIsValid"
-    >
-      <p v-show="!connectionFailed">Please wait for establishing a connection...</p>
-      <p v-show="connectionFailed">
-        Sorry! apparently server doesn't respond, please try again.<br/>
-        <a href="#" @click.prevent="startEstablishingConnection">Try Again</a>
-      </p>
-    </div>
-
     <component
         v-if="themeReady && isReady"
         v-show="roomIsValid"
         :is="themeLayout"
         :connections="connections"
         :userSettings="userSettings"
-        @onLeftRoom="leftTheRoom"
-        @onRunAction="runAction"
-    />
+        :commands="commands"
+    >
+      <template v-slot:modules>
+        <ChatModule
+          ref="modules[chat]"
+         :webrtc="webrtc"
+         :runAction="commands.run"
+        />
 
-    <VideoConferenceActions
-        ref="actions"
-        v-if="themeReady && isReady"
-        :room="room"
-        :webrtc="webrtc"
-        :connections="connections"
-        :userSettings="userSettings"
-    />
-
+        <PeopleModule
+          ref="modules[people]"
+          :webrtc="webrtc"
+          :runAction="commands.run"
+        />
+      </template>
+      <template v-slot:actions>
+        <VideoConferenceActions
+          ref="actions"
+          v-if="themeReady && isReady"
+          :room="room"
+          :webrtc="webrtc"
+          :connections="connections"
+          :userSettings="userSettings"
+        />
+      </template>
+    </component>
   </div>
 </template>
 
 <script>
-import {inject, shallowRef} from "vue";
+import { inject, shallowRef } from "vue";
 import VideoConferenceActions from "./VideoConferenceActions";
 import webRTCsocket from "../../configs/webRTCsocket";
+import ChatModule from "./modules/ChatModule";
+import PeopleModule from "./modules/PeopleModule";
 
 export default {
   name: "VideoConference",
@@ -56,7 +55,7 @@ export default {
     await this.setThemeLayout();
     window.addEventListener('onConnectToRoomSuccess', this.eventHandlerConnectToRoomSuccess);
   },
-  props: ['name'],
+  props: ['name', 'devices', 'camDisable', 'micDisable'],
   data() {
     return {
       room: null,
@@ -75,6 +74,14 @@ export default {
       theme: webRTCsocket.videoconference_theme,
       themeReady: false,
       themeLayout: shallowRef(null),
+      commands: {
+        mute: (device) => { this.deviceMuteControl(device); },
+        left: () => { this.leftTheRoom() },
+        run: (name, data = {}) => {
+          this.$refs.actions.runAction({name: name, data: data });
+        },
+        open: (name) => { this.openModule(name); }
+      }
     }
   },
   methods: {
@@ -104,21 +111,28 @@ export default {
         return;
       }
 
-      if (!this.token) {
+      if(!this.token) {
         console.log('Connection is not established with server.');
         return;
       }
 
-      if (!this.room || !this.room.id) {
+      if(!this.room || !this.room.id) {
         console.log('Please set the room id for joining.');
         return;
       }
 
+      this.userSettings = Object.assign({
+        camDisable: this.camDisable,
+        micDisable: this.micDisable,
+      }, this.userSettings);
+
       this.connect().then(async () => {
         this.webrtc.setup({
           options: {
-            videoRef: '.video-content',
-            peerRef: '.peer-content',
+            name: this.name,
+            localVideoRef: 'video-item',
+            remoteVideoRef: 'remote-video',
+            remoteAudioRef: 'remote-audio',
           },
           callback: {
             joinRoom: this.userJoinRoom,
@@ -132,7 +146,11 @@ export default {
         });
 
         try {
-          this.startEstablishingConnection();
+          this.webrtc.initialPeerJs().then(async (peerJsId) => {
+            this.startEstablishingConnection();
+          }).catch((error) => {
+            this.$emit('onPeerJsConnectionFailed');
+          });
         } catch (error) {
           console.log('webrtc initialize error:');
           console.log(error);
@@ -149,13 +167,13 @@ export default {
         return;
       }
 
-      this.webrtc.Room.join(this.room.id, {
+      this.webrtc.Room.join(this.room.id,{
         name: this.name
       });
 
       this.attemptCount += 1;
 
-      if (this.attemptCount <= this.reconnectAttemptCount) {
+      if(this.attemptCount <= this.reconnectAttemptCount) {
         setTimeout(this.establishingConnection, this.connectionTimeout * 1000);
       } else {
         this.connectionFailed = true;
@@ -166,20 +184,30 @@ export default {
         username: this.name,
       };
 
-      this.webrtc.Room.left(this.room.id, data);
+      this.webrtc.Room.left(this.room?.id, data);
       this.exitConference();
+    },
+    deviceMuteControl(device) {
+      if(device === 'camera') {
+        this.userSettings.camDisable = !this.userSettings.camDisable;
+        this.webrtc.Media.muteCamera();
+      } else {
+        this.userSettings.micDisable = !this.userSettings.micDisable;
+        this.webrtc.Media.muteMicrophone();
+      }
     },
     exitConference() {
       this.$emit('onCloseConference');
     },
     userLeftRoom(data) {
-      console.log(data.username + ' left room!');
+      console.log(data?.username + ' left room!');
     },
     userJoinRoom(data) {
       console.log('user join to room: ' + data.peerJsId);
     },
     invalidRoom() {
       this.roomIsValid = false;
+      this.$emit('onAuthorizeRoomInvalid');
     },
     async setThemeLayout() {
       let theme = null;
@@ -187,7 +215,7 @@ export default {
 
       try {
         theme = await this.loadThemeLayout(themeName);
-      } catch (error) {
+      } catch(error) {
         theme = await this.loadThemeLayout('Default');
       }
 
@@ -202,8 +230,9 @@ export default {
       let _text = text.toLowerCase();
       return _text.charAt(0).toUpperCase() + _text.slice(1);
     },
-    runAction(action) {
-      this.$refs.actions.runAction(action);
+    openModule(name) {
+      const moduleRefName = 'modules[' + name + ']';
+      this.$refs[moduleRefName].open(this.room);
     },
     banInRoom(data) {
       alert('you are ban! :))))');
@@ -213,21 +242,22 @@ export default {
       this.loading = false;
       this.isReady = true;
 
-      // data.detail
+      this.$emit('onConnectionInitialed', data.detail);
+
       this.$nextTick(async () => {
-        this.webrtc.initialPeerJs().then(async (peerJsId) => {
-          await this.webrtc.startStreamUserMedia();
-          this.webrtc.Room.notifyJoinSuccess(this.room.id);
-        });
+        await this.webrtc.startStreamUserMedia(this.devices);
+        this.webrtc.Room.notifyJoinSuccess(this.room.id);
       });
     }
   },
   beforeUnmount() {
     this.leftTheRoom();
     window.removeEventListener('onRoomInformationReceived',
-        this.eventHandlerConnectToRoomSuccess);
+      this.eventHandlerConnectToRoomSuccess);
   },
   components: {
+    ChatModule,
+    PeopleModule,
     VideoConferenceActions,
   }
 }

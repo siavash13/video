@@ -2,38 +2,47 @@
 <div id="videoConferenceActions">
   <BanAction
     ref="actions[ban]"
+    class="action"
+    :room="room"
     :webrtc="webrtc"
+    :userSettings="userSettings"
   />
 
   <TerminateAction
     ref="actions[terminate]"
+    class="action"
+    :room="room"
     :webrtc="webrtc"
-  />
-
-  <InfoAction
-    ref="actions[info]"
-    :webrtc="webrtc"
-  />
-
-  <AlertAction
-    ref="actions[alert]"
-    :webrtc="webrtc"
+    :userSettings="userSettings"
   />
 
   <MultiAction
     ref="actions[multi]"
+    class="action"
+    :room="room"
     :webrtc="webrtc"
+    :userSettings="userSettings"
   />
 
-  <CanvastextAction
-    ref="actions[canvastext]"
+  <CanvasTextAction
+    ref="actions[canvas-text]"
+    class="action"
     :room="room"
     :webrtc="webrtc"
     :userSettings="userSettings"
   />
 
   <FaceApiAction
-    ref="actions[faceapi]"
+    ref="actions[face-api]"
+    class="action"
+    :room="room"
+    :webrtc="webrtc"
+    :userSettings="userSettings"
+  />
+
+  <MuteUserMicAction
+    ref="actions[mute-user-mic]"
+    class="action"
     :room="room"
     :webrtc="webrtc"
     :userSettings="userSettings"
@@ -43,40 +52,41 @@
 </template>
 
 <script>
-import InfoAction from "./actions/InfoAction";
 import BanAction from "./actions/BanAction";
 import TerminateAction from "./actions/TerminateAction";
-import AlertAction from "./actions/AlertAction";
 import MultiAction from "./actions/MultiAction";
-import CanvastextAction from "./actions/CanvastextAction";
+import CanvasTextAction from "./actions/CanvasTextAction";
 import FaceApiAction from "./actions/FaceApiAction";
+import MuteUserMicAction from "./actions/MuteUserMicAction";
 
 export default {
   name: "VideoConferenceActions",
   props: ['room', 'webrtc', 'connections', 'userSettings'],
   methods: {
     runAction(action) {
-      const actionRefName = 'actions[' + action.name + ']';
+      const actionName = this.webrtc.camelToKebab(action.name);
+      const actionRefName = 'actions[' + actionName + ']';
       this.$refs[actionRefName].run(this.room, action.data || {});
     },
   },
   components: {
-    InfoAction,
     BanAction,
     TerminateAction,
-    AlertAction,
     MultiAction,
-    CanvastextAction,
+    CanvasTextAction,
     FaceApiAction,
+    MuteUserMicAction,
   }
 }
 </script>
 
 <style lang="scss">
 #videoConferenceActions {
-  position: fixed;
-  z-index: 99999;
   width: 100%;
-  height: 100vh;
+
+  .action {
+    position: absolute;
+    z-index: 999998;
+  }
 }
 </style>

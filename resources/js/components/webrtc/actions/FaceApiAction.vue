@@ -41,11 +41,17 @@
 </template>
 
 <script>
+import FakeFace from "../../../assets/webrtc/images/face-profile.jpg";
+
 export default {
   name: "FaceApiAction",
   props: ['room', 'webrtc', 'userSettings'],
   created() {
-
+    this.setImages();
+    this.webrtc.Media.setEvent('set-user-info', this.handleUserInfoStore, 'play');
+  },
+  mounted() {
+    this.setActionEventListener();
   },
   computed: {
     users() {
@@ -72,7 +78,7 @@ export default {
       selectedUser: null,
       event: null,
       action: {
-        name: 'faceapi',
+        name: 'face-api',
         moderator: true,
         users: [],
         attributes: {
@@ -80,7 +86,19 @@ export default {
           timeout: '5',
           peerJsId: null,
         }
-      }
+      },
+
+      faceDetectReady: false,
+      faceApi: {
+        usersData: [],
+        drawItems: ['hat', 'medal'],
+        endTimes: [],
+      },
+      images: {
+        medal: null,
+        hat: null,
+        faceTest: null,
+      },
     }
   },
   methods: {
@@ -103,6 +121,192 @@ export default {
       this.webrtc.runAction(this.room.id, action);
       this.show(false);
     },
+    setActionEventListener() {
+      window.addEventListener('onFaceApiAction-DetectAndDraw', this.userFaceApiListenerAction);
+    },
+    clearAllIntervals() {
+      for (let i = 1; i < 99999; i++)
+        window.clearInterval(i);
+
+      // clear window event listener
+      window.removeEventListener('onFaceApiAction-DetectAndDraw',this.userFaceApiListenerAction);
+    },
+    setImages() {
+      this.images.faceTest = new Image;
+      this.images.faceTest.src = FakeFace;
+      this.images.faceTest.onload = () => {
+        this.prepareFaceDetector();
+      }
+
+      this.images.hat = new Image;
+      this.images.hat.src = "/images/pirate-hat.webp";
+      this.images.medal = new Image;
+      this.images.medal.src = "/images/medal.png";
+    },
+    async handleUserInfoStore(video) {
+      try {
+        await this.findFaceApiUserDataByPeerId(video.dataset.peerid)
+      } catch (error) {
+        const canvas = (video.classList.contains('video-content')) ?
+          document.querySelector('.video-content-canvas') :
+          document.querySelector('.peer-content-canvas-' + video.dataset.peerid);
+
+        this.faceApi.usersData.push({
+          peerJsId: video.dataset.peerid,
+          active: false,
+          video: video,
+          canvas: canvas,
+        });
+      }
+    },
+    findFaceApiUserDataByPeerId(peerId) {
+      return new Promise((resolve, reject) => {
+        let index = this.faceApi.usersData.findIndex(x => x.peerJsId === peerId);
+        (index > -1) ? resolve(this.faceApi.usersData[index]) : reject('cant find user');
+      });
+    },
+    setFaceLastPosition(peerId, box) {
+      let index = this.faceApi.usersData.findIndex(x => x.peerJsId === peerId);
+      this.faceApi.usersData[index].faceLastPosition = box;
+    },
+    userFaceApiListenerAction(e) {
+      let indexUserData = this.faceApi.usersData.findIndex(x => x.peerJsId === e.detail.peerJsId);
+      let indexEndTimes = this.faceApi.endTimes.findIndex(x => x.peerJsId === e.detail.peerJsId);
+
+      if (indexEndTimes < 0) {
+        indexEndTimes = this.faceApi.endTimes.push({
+          peerJsId: e.detail.peerJsId,
+          count: 0,
+          hat: null,
+          medal: null,
+        }) - 1;
+      }
+
+      this.faceApi.endTimes[indexEndTimes][e.detail.type] = new Date();
+      this.faceApi.endTimes[indexEndTimes][e.detail.type].setTime(
+        this.faceApi.endTimes[indexEndTimes][e.detail.type].getTime() + parseInt(e.detail.timeout) * 1000
+      );
+
+      let count = 0;
+      this.faceApi.drawItems.forEach(type => {
+        if (!!this.faceApi.endTimes[indexEndTimes][type])
+          count += 1;
+      });
+
+      this.faceApi.endTimes[indexEndTimes]['count'] = count;
+
+      if (!this.faceApi.usersData[indexUserData].active) {
+        this.detectFaceFromVideo(e.detail.peerJsId);
+      }
+    },
+    async detectFaceFromVideo(peerId) {
+      let faceApiData;
+
+      try {
+        faceApiData = await this.findFaceApiUserDataByPeerId(peerId);
+
+        faceApiData.active = true;
+
+        const detections = await faceAPI.detectSingleFace(faceApiData.video,
+          new faceAPI.TinyFaceDetectorOptions())
+          .withFaceLandmarks()
+          .withFaceExpressions();
+
+        const dims = faceAPI.matchDimensions(faceApiData.canvas, faceApiData.video, true);
+        const resizedResults = faceAPI.resizeResults(detections, dims);
+
+        this.setFaceLastPosition(peerId, resizedResults.alignedRect.box);
+
+        // faceAPI.draw.drawDetections(faceApiData.canvas, resizedResults);
+        // faceAPI.draw.drawFaceLandmarks(canvas, resizedResults);
+        this.draw(faceApiData);
+      } catch (error) {
+        // console.log(error);
+      }
+
+      // check timer
+      if (!!faceApiData) {
+        this.checkDrawTypesTimer(faceApiData);
+      }
+    },
+    async draw(faceApiData) {
+      let index = this.faceApi.endTimes.findIndex(x => x.peerJsId === faceApiData.peerJsId);
+      let currentTime = Date.now();
+      let ctx = faceApiData.canvas.getContext("2d");
+
+      ctx.clearRect(0, 0, faceApiData.canvas.width, faceApiData.canvas.height);
+
+      this.faceApi.drawItems.forEach((type) => {
+        if (!this.faceApi.endTimes[index][type]) {
+          return;
+        }
+
+        if (currentTime > this.faceApi.endTimes[index][type]) {
+          this.faceApi.endTimes[index].count -= 1;
+          this.faceApi.endTimes[index][type] = null;
+          return;
+        }
+
+        let functionName = 'calculate' + type.charAt(0).toUpperCase() + type.slice(1) + 'Position';
+        let attributes = this[functionName](faceApiData);
+
+        ctx.drawImage(this.images[type],
+          attributes.posX,
+          attributes.posY,
+          attributes.width,
+          attributes.height);
+      });
+    },
+    calculateHatPosition(data) {
+      let width = data.faceLastPosition.width * 2.6;
+
+      return {
+        width: width,
+        height: this.images.hat.naturalHeight / (this.images.hat.naturalWidth / width),
+        posX: data.faceLastPosition.x - ((width - data.faceLastPosition.width) / 2),
+        posY: data.faceLastPosition.y - ((width - data.faceLastPosition.width) / 1.22),
+      };
+    },
+    calculateMedalPosition(data) {
+      let width = data.faceLastPosition.width / 1.8;
+
+      return {
+        width: width,
+        height: this.images.medal.naturalHeight / (this.images.medal.naturalWidth / width),
+        posX: data.faceLastPosition.x + (data.faceLastPosition.x / 1.32),
+        posY: data.faceLastPosition.y + data.faceLastPosition.height + (data.faceLastPosition.height / 10)
+      };
+    },
+    checkDrawTypesTimer(faceApiData) {
+      let index = this.faceApi.endTimes.findIndex(x => x.peerJsId === faceApiData.peerJsId);
+
+      if (this.faceApi.endTimes[index].count > 0) {
+        setTimeout(async () => {
+          await this.detectFaceFromVideo(faceApiData.peerJsId);
+        });
+      } else {
+        faceApiData.active = false;
+        this.clearUserDrawCanvas(faceApiData.peerJsId);
+      }
+    },
+    async clearUserDrawCanvas(peerId) {
+      const faceApiData = await this.findFaceApiUserDataByPeerId(peerId);
+      let ctx = faceApiData.canvas.getContext("2d");
+      ctx.clearRect(0, 0, faceApiData.canvas.width, faceApiData.canvas.height);
+    },
+    async prepareFaceDetector() {
+      await faceAPI.detectSingleFace(this.images.faceTest,
+        new faceAPI.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withFaceExpressions()
+        .then(res => {
+          this.faceDetectReady = true;
+        });
+    }
+  },
+  unmounted() {
+    // clear canvas text render interval
+    this.clearAllIntervals();
   }
 }
 </script>
