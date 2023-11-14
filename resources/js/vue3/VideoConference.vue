@@ -1,12 +1,12 @@
 <template>
   <div id="video-conference">
     <component
-        v-if="themeReady && isReady"
-        v-show="roomIsValid"
-        :is="themeLayout"
-        :connections="connections"
-        :userSettings="userSettings"
-        :commands="commands"
+      v-if="themeReady && isReady"
+      v-show="roomIsValid"
+      :is="themeLayout"
+      :connections="connections"
+      :userSettings="userSettings"
+      :commands="commands"
     >
       <template v-slot:modules>
         <ChatModule
@@ -37,6 +37,10 @@
 
 <script>
 import { inject, shallowRef } from "vue";
+import '@tensorflow/tfjs-core';
+import '@tensorflow/tfjs-backend-webgl';
+import '@tensorflow/tfjs-converter';
+
 import VideoConferenceActions from "./VideoConferenceActions";
 import webRTCsocket from "../../configs/webRTCsocket";
 import ChatModule from "./modules/ChatModule";
@@ -81,7 +85,7 @@ export default {
           this.$refs.actions.runAction({name: name, data: data });
         },
         open: (name) => { this.openModule(name); }
-      }
+      },
     }
   },
   methods: {
@@ -116,7 +120,7 @@ export default {
         return;
       }
 
-      if(!this.room || !this.room.id) {
+      if (!this.room || !this.room.id) {
         console.log('Please set the room id for joining.');
         return;
       }
@@ -173,7 +177,7 @@ export default {
 
       this.attemptCount += 1;
 
-      if(this.attemptCount <= this.reconnectAttemptCount) {
+      if (this.attemptCount <= this.reconnectAttemptCount) {
         setTimeout(this.establishingConnection, this.connectionTimeout * 1000);
       } else {
         this.connectionFailed = true;
@@ -235,7 +239,7 @@ export default {
       this.$refs[moduleRefName].open(this.room);
     },
     banInRoom(data) {
-      alert('you are ban! :))))');
+      alert('you are ban!');
       this.exitConference();
     },
     eventHandlerConnectToRoomSuccess(data) {

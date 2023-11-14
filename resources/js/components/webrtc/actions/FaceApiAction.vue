@@ -48,9 +48,11 @@ export default {
   props: ['room', 'webrtc', 'userSettings'],
   created() {
     this.setImages();
-    this.webrtc.Media.setEvent('set-user-info', this.handleUserInfoStore, 'play');
+
+  //  this.webrtc.Media.setEvent('set-user-info', this.handleUserInfoStore, 'play');
   },
   mounted() {
+    this.initialCallbacks();
     this.setActionEventListener();
   },
   computed: {
@@ -87,12 +89,16 @@ export default {
           peerJsId: null,
         }
       },
-
-      faceDetectReady: false,
       faceApi: {
-        usersData: [],
         drawItems: ['hat', 'medal'],
-        endTimes: [],
+        endTime: {
+          hat: null,
+          medal: null,
+        },
+        callbacks: {
+          hat: null,
+          medal: null,
+        }
       },
       images: {
         medal: null,
@@ -111,12 +117,18 @@ export default {
     run() {
       this.show();
     },
+    initialCallbacks() {
+      this.faceApi.callbacks.hat = this.webrtc.Media.registerFaceDetectorCallback('hat', this.draw);
+      this.faceApi.callbacks.medal = this.webrtc.Media.registerFaceDetectorCallback('medal', this.draw);
+    },
     startDraw() {
       let action = Object.assign({}, this.action);
 
       action.attributes.type = this.type;
       action.attributes.timeout = this.timeout;
-      action.attributes.peerJsId = this.selectedUser;
+      action.users.push({
+        peerJsId: this.selectedUser
+      });
 
       this.webrtc.runAction(this.room.id, action);
       this.show(false);
@@ -124,18 +136,14 @@ export default {
     setActionEventListener() {
       window.addEventListener('onFaceApiAction-DetectAndDraw', this.userFaceApiListenerAction);
     },
-    clearAllIntervals() {
-      for (let i = 1; i < 99999; i++)
-        window.clearInterval(i);
-
-      // clear window event listener
+    clearlistener() {
       window.removeEventListener('onFaceApiAction-DetectAndDraw',this.userFaceApiListenerAction);
     },
     setImages() {
       this.images.faceTest = new Image;
       this.images.faceTest.src = FakeFace;
       this.images.faceTest.onload = () => {
-        this.prepareFaceDetector();
+
       }
 
       this.images.hat = new Image;
@@ -143,170 +151,65 @@ export default {
       this.images.medal = new Image;
       this.images.medal.src = "/images/medal.png";
     },
-    async handleUserInfoStore(video) {
-      try {
-        await this.findFaceApiUserDataByPeerId(video.dataset.peerid)
-      } catch (error) {
-        const canvas = (video.classList.contains('video-content')) ?
-          document.querySelector('.video-content-canvas') :
-          document.querySelector('.peer-content-canvas-' + video.dataset.peerid);
-
-        this.faceApi.usersData.push({
-          peerJsId: video.dataset.peerid,
-          active: false,
-          video: video,
-          canvas: canvas,
-        });
-      }
-    },
-    findFaceApiUserDataByPeerId(peerId) {
-      return new Promise((resolve, reject) => {
-        let index = this.faceApi.usersData.findIndex(x => x.peerJsId === peerId);
-        (index > -1) ? resolve(this.faceApi.usersData[index]) : reject('cant find user');
-      });
-    },
-    setFaceLastPosition(peerId, box) {
-      let index = this.faceApi.usersData.findIndex(x => x.peerJsId === peerId);
-      this.faceApi.usersData[index].faceLastPosition = box;
-    },
     userFaceApiListenerAction(e) {
-      let indexUserData = this.faceApi.usersData.findIndex(x => x.peerJsId === e.detail.peerJsId);
-      let indexEndTimes = this.faceApi.endTimes.findIndex(x => x.peerJsId === e.detail.peerJsId);
-
-      if (indexEndTimes < 0) {
-        indexEndTimes = this.faceApi.endTimes.push({
-          peerJsId: e.detail.peerJsId,
-          count: 0,
-          hat: null,
-          medal: null,
-        }) - 1;
-      }
-
-      this.faceApi.endTimes[indexEndTimes][e.detail.type] = new Date();
-      this.faceApi.endTimes[indexEndTimes][e.detail.type].setTime(
-        this.faceApi.endTimes[indexEndTimes][e.detail.type].getTime() + parseInt(e.detail.timeout) * 1000
+      this.faceApi.endTime[e.detail.type] = new Date();
+      this.faceApi.endTime[e.detail.type].setTime(
+        this.faceApi.endTime[e.detail.type].getTime() + parseInt(e.detail.timeout) * 1000
       );
 
-      let count = 0;
-      this.faceApi.drawItems.forEach(type => {
-        if (!!this.faceApi.endTimes[indexEndTimes][type])
-          count += 1;
-      });
-
-      this.faceApi.endTimes[indexEndTimes]['count'] = count;
-
-      if (!this.faceApi.usersData[indexUserData].active) {
-        this.detectFaceFromVideo(e.detail.peerJsId);
-      }
+      this.faceApi.callbacks[e.detail.type].enable = true;
     },
-    async detectFaceFromVideo(peerId) {
-      let faceApiData;
-
-      try {
-        faceApiData = await this.findFaceApiUserDataByPeerId(peerId);
-
-        faceApiData.active = true;
-
-        const detections = await faceAPI.detectSingleFace(faceApiData.video,
-          new faceAPI.TinyFaceDetectorOptions())
-          .withFaceLandmarks()
-          .withFaceExpressions();
-
-        const dims = faceAPI.matchDimensions(faceApiData.canvas, faceApiData.video, true);
-        const resizedResults = faceAPI.resizeResults(detections, dims);
-
-        this.setFaceLastPosition(peerId, resizedResults.alignedRect.box);
-
-        // faceAPI.draw.drawDetections(faceApiData.canvas, resizedResults);
-        // faceAPI.draw.drawFaceLandmarks(canvas, resizedResults);
-        this.draw(faceApiData);
-      } catch (error) {
-        // console.log(error);
-      }
-
-      // check timer
-      if (!!faceApiData) {
-        this.checkDrawTypesTimer(faceApiData);
-      }
-    },
-    async draw(faceApiData) {
-      let index = this.faceApi.endTimes.findIndex(x => x.peerJsId === faceApiData.peerJsId);
+    async checkCallbackTimeOut(type) {
       let currentTime = Date.now();
-      let ctx = faceApiData.canvas.getContext("2d");
 
-      ctx.clearRect(0, 0, faceApiData.canvas.width, faceApiData.canvas.height);
+      if (!this.faceApi.callbacks[type].enable) {
+        return false;
+      }
 
-      this.faceApi.drawItems.forEach((type) => {
-        if (!this.faceApi.endTimes[index][type]) {
-          return;
-        }
+      if (currentTime > this.faceApi.endTime[type]) {
+        this.faceApi.endTime[type] = null;
+        this.faceApi.callbacks[type].enable = false;
+        return false;
+      }
 
-        if (currentTime > this.faceApi.endTimes[index][type]) {
-          this.faceApi.endTimes[index].count -= 1;
-          this.faceApi.endTimes[index][type] = null;
-          return;
-        }
+      return true;
+    },
+    draw(lastPosition, canvas, type) {
+      if (!this.checkCallbackTimeOut(type)) return;
 
-        let functionName = 'calculate' + type.charAt(0).toUpperCase() + type.slice(1) + 'Position';
-        let attributes = this[functionName](faceApiData);
+      const ctx = canvas.getContext("2d");
+      const methodName = 'calculate' + type.charAt(0).toUpperCase() + type.slice(1) + 'Position';
+      const typePosition = this[methodName](lastPosition);
 
-        ctx.drawImage(this.images[type],
-          attributes.posX,
-          attributes.posY,
-          attributes.width,
-          attributes.height);
-      });
+      ctx.drawImage(this.images[type],
+        typePosition.posX,
+        typePosition.posY,
+        typePosition.width,
+        typePosition.height);
     },
     calculateHatPosition(data) {
-      let width = data.faceLastPosition.width * 2.6;
+      let width = data.width * 2.6;
 
       return {
         width: width,
         height: this.images.hat.naturalHeight / (this.images.hat.naturalWidth / width),
-        posX: data.faceLastPosition.x - ((width - data.faceLastPosition.width) / 2),
-        posY: data.faceLastPosition.y - ((width - data.faceLastPosition.width) / 1.22),
+        posX: data.xMin - ((width - data.width) / 2),
+        posY: data.yMin - ((width - data.width) / 1.22),
       };
     },
     calculateMedalPosition(data) {
-      let width = data.faceLastPosition.width / 1.8;
+      let width = data.width / 1.8;
 
       return {
         width: width,
         height: this.images.medal.naturalHeight / (this.images.medal.naturalWidth / width),
-        posX: data.faceLastPosition.x + (data.faceLastPosition.x / 1.32),
-        posY: data.faceLastPosition.y + data.faceLastPosition.height + (data.faceLastPosition.height / 10)
+        posX: data.xMin + (data.xMin / 1.32),
+        posY: data.yMin + data.height + (data.height / 10)
       };
     },
-    checkDrawTypesTimer(faceApiData) {
-      let index = this.faceApi.endTimes.findIndex(x => x.peerJsId === faceApiData.peerJsId);
-
-      if (this.faceApi.endTimes[index].count > 0) {
-        setTimeout(async () => {
-          await this.detectFaceFromVideo(faceApiData.peerJsId);
-        });
-      } else {
-        faceApiData.active = false;
-        this.clearUserDrawCanvas(faceApiData.peerJsId);
-      }
-    },
-    async clearUserDrawCanvas(peerId) {
-      const faceApiData = await this.findFaceApiUserDataByPeerId(peerId);
-      let ctx = faceApiData.canvas.getContext("2d");
-      ctx.clearRect(0, 0, faceApiData.canvas.width, faceApiData.canvas.height);
-    },
-    async prepareFaceDetector() {
-      await faceAPI.detectSingleFace(this.images.faceTest,
-        new faceAPI.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withFaceExpressions()
-        .then(res => {
-          this.faceDetectReady = true;
-        });
-    }
   },
   unmounted() {
-    // clear canvas text render interval
-    this.clearAllIntervals();
+    this.clearlistener();
   }
 }
 </script>

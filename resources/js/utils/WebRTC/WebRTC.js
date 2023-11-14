@@ -14,6 +14,7 @@ class Webrtc
     this.peerJsId = null;
     this.options = {};
     this.callback = {};
+    this.configs = socketConfig;
 
     this.Room = require('./modules/Room')();
     this.Media = require('./modules/Media')();

@@ -9,10 +9,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 class VideoConferenceTest extends BaseTestCase
 {
     use RefreshDatabase;
-    /** @test  */
-    public function it_is_working(){
-        $this->assertEquals(2, 2);
-    }
 
     /** @test  */
     public function a_room_can_be_created_with_factory()

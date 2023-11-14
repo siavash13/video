@@ -16,6 +16,20 @@
                 <path d="m9.486 10.607-.748-.748A2 2 0 0 1 6 8v-.878l-1-1V8a3 3 0 0 0 4.486 2.607zm-7.84-9.253 12 12 .708-.708-12-12-.708.708z"/>
               </svg>
             </div>
+            <div class="user-footer-actions">
+              <div @click="blurUserMediaBackground(!blur)" class="action-item">
+                <div v-if="!blur">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512">
+                    <path fill="currentColor" d="M391.3 213.4C343.4 134.8 296.4 106.7 258.5 0c-38.1 106.7-84.9 134.8-132.8 213.4c-43.3 71-56.9 170.7 0 234.7c37.9 42.7 76 64.1 132.8 63.9c57.1.2 94.9-21.2 132.8-63.9c56.9-64 43.3-163.7 0-234.7z"/>
+                  </svg>
+                </div>
+                <div v-else>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M5.432 6.843L1.394 2.805L2.808 1.39l19.799 19.8l-1.415 1.414l-3.038-3.04A9 9 0 0 1 5.432 6.845Zm2.811-2.817L12 .269l6.364 6.364a9.002 9.002 0 0 1 2.05 9.564L8.244 4.026Z"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
             <div class="user-video">
               <div v-if="userSettings.camDisable" class="camera-mute">
                 <p>Camera off</p>
@@ -23,9 +37,10 @@
               <video
                 id="video-item"
                 class="video-content video-item"
+                width="640"
+                height="480"
                 :data-peerId="userSettings.peerJsId"
               ></video>
-              <canvas class="video-content-canvas"></canvas>
             </div>
           </div>
         </div>
@@ -45,6 +60,13 @@
                 <path d="m9.486 10.607-.748-.748A2 2 0 0 1 6 8v-.878l-1-1V8a3 3 0 0 0 4.486 2.607zm-7.84-9.253 12 12 .708-.708-12-12-.708.708z"/>
               </svg>
             </div>
+            <div
+              v-if="userSettings.isCreator && !connection.micMute"
+              class="microphone-unmute"
+              @click="muteUserMic(connection.peerJsId)"
+            >
+              [mute]
+            </div>
             <div class="user-video">
               <div v-if="connection.camMute" class="camera-mute">
                 <p>Camera off</p>
@@ -60,10 +82,6 @@
                 :id="'remote-audio-' + connection.id"
                 :data-peerid="connection.id"
               ></audio>
-              <canvas
-                class="video-peer-content-canvas"
-                :class="'peer-content-canvas-' + connection.id"
-              ></canvas>
             </div>
           </div>
         </div>
@@ -93,10 +111,19 @@ export default {
   props: ['commands', 'connections', 'userSettings'],
   data() {
     return {
-
+      blur: false,
     }
   },
   methods: {
+    muteUserMic(peerJsId) {
+      this.commands.run('muteUserMic', {
+        peerJsId: peerJsId
+      });
+    },
+    blurUserMediaBackground(status) {
+      this.blur = status;
+      this.webrtc.Media.blurBackground(status);
+    },
     clearAllIntervals() {
       for (let i = 1; i < 99999; i++)
         window.clearInterval(i);
@@ -201,6 +228,19 @@ export default {
         right: 0;
         opacity: 0.6;
         background: #000;
+      }
+    }
+
+    .user-footer-actions {
+      position: absolute;
+      z-index: 3;
+      right: 15px;
+      bottom: 15px;
+      display: inline-block;
+      color: #fff;
+
+      .action-item {
+        cursor: pointer;
       }
     }
 

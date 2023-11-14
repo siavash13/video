@@ -1,42 +1,45 @@
 <template>
   <div id="video-conference">
     <component
-        v-if="themeReady && isReady"
-        v-show="roomIsValid"
-        :is="themeLayout"
-        :connections="connections"
-        :userSettings="userSettings"
-        :commands="commands"
+      v-if="themeReady && isReady"
+      v-show="roomIsValid"
+      :is="themeLayout"
+      :connections="connections"
+      :userSettings="userSettings"
+      :commands="commands"
     >
       <template v-slot:modules>
         <ChatModule
-            ref="modules[chat]"
-            :webrtc="$webrtc"
-            :runAction="commands.run"
+          ref="modules[chat]"
+          :webrtc="$webrtc"
+          :runAction="commands.run"
         />
 
         <PeopleModule
-            ref="modules[people]"
-            :webrtc="$webrtc"
-            :runAction="commands.run"
+          ref="modules[people]"
+          :webrtc="$webrtc"
+          :runAction="commands.run"
         />
       </template>
       <template v-slot:actions>
         <VideoConferenceActions
-            ref="actions"
-            v-if="themeReady && isReady"
-            :room="room"
-            :webrtc="$webrtc"
-            :connections="connections"
-            :userSettings="userSettings"
+          ref="actions"
+          v-if="themeReady && isReady"
+          :room="room"
+          :webrtc="$webrtc"
+          :connections="connections"
+          :userSettings="userSettings"
         />
       </template>
     </component>
-
   </div>
 </template>
 
 <script>
+import '@tensorflow/tfjs-core';
+import '@tensorflow/tfjs-backend-webgl';
+import '@tensorflow/tfjs-converter';
+
 import VideoConferenceActions from "./VideoConferenceActions";
 import webRTCsocket from "../../configs/webRTCsocket";
 import ChatModule from "./modules/ChatModule";
@@ -177,7 +180,7 @@ export default {
         username: this.name,
       };
 
-      this.$webrtc.leftRoom(this.room.id, data);
+      this.$webrtc.Room.left(this.room?.id, data);
       this.exitConference();
     },
     deviceMuteControl(device) {
@@ -228,7 +231,7 @@ export default {
       this.$refs[moduleRefName].open(this.room);
     },
     banInRoom(data) {
-      alert('you are ban! :))))');
+      alert('you are ban!');
       this.exitConference();
     },
     eventHandlerConnectToRoomSuccess(data) {

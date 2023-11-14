@@ -1,3 +1,6 @@
+const faceDetection = require('./MediapipeFaceDetect')();
+const bodySegmentation = require('./MediapipeBodySegment')();
+
 const errors = [
   { name: ['NotFoundError', 'DevicesNotFoundError'], message: 'required track is missing' },
   { name: ['NotReadableError', 'TrackStartError'], message: 'webcam or mic are already in use ' },
@@ -12,7 +15,6 @@ const createEmptyMediaStream = () => {
     createEmptyVideoTrack({ width:640, height:480 })
   ])
 }
-
 
 const createEmptyAudioTrack = () => {
   const ctx = new AudioContext();
@@ -33,6 +35,26 @@ const createEmptyVideoTrack = ({ width, height }) => {
   return Object.assign(track, { enabled: false });
 };
 
+/**
+ * Draw video frame image on canvas
+ */
+const drawVideoOnCanvas = async (video, canvas) => {
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+}
+
+/**
+ * Flip horizontal canvas frame image
+ */
+const flipVideoImage = async (canvas) => {
+  const ctx = canvas.getContext('2d');
+
+  ctx.save();
+  ctx.scale(-1, 1);
+  ctx.drawImage(canvas, canvas.width * -1, 0, canvas.width, canvas.height);
+  ctx.restore();
+}
+
 module.exports = () => {
 
   const Media = {
@@ -40,6 +62,12 @@ module.exports = () => {
     devices: null,
     userMedia: null,
     options: null,
+    canvas: null,
+    video: null,
+    interval: null,
+    process: false,
+    bodySegmenter: null,
+    faceDetector: null,
   };
 
   Media.setup = (parent, options) => {
@@ -50,13 +78,40 @@ module.exports = () => {
     this.devices = null;
     this.userMedia = null;
     this.options = options;
+    this.canvas = document.createElement('canvas');
+    this.video = document.createElement('video');
+
+    this.canvas.width = "640";
+    this.canvas.height = "480";
+    this.video.width = "640";
+    this.video.height = "480";
+
+    this.bodySegmenter = {
+      segmenter: null,
+      blur: 0,
+    };
+
+    this.faceDetector = {
+      detector: null,
+      detect: false,
+      positions: null,
+      callbacks: []
+    };
+
+    bodySegmentation.initial(this.parent.configs).then(segmenter => {
+      this.bodySegmenter.segmenter = segmenter;
+
+      faceDetection.initial(this.parent.configs).then(detector => {
+        this.faceDetector.detector = detector;
+      });
+    });
   }
 
   /**
    * Grab User Media
    */
   Media.grab = (devices, muteVideo = false, muteAudio = false) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       Media.devices = devices;
 
       let videoParams = (muteVideo)? false : {
@@ -81,16 +136,33 @@ module.exports = () => {
         audio: audioParams
       }).then(media => {
 
-        if(this.parent.userSettings.camDisable) {
+        clearInterval(this.interval);
+
+        if (this.parent.userSettings.camDisable) {
           media.addTrack(createEmptyVideoTrack({ width:640, height:480 }));
         }
 
-        if(this.parent.userSettings.micDisable) {
+        if (this.parent.userSettings.micDisable) {
           media.addTrack(createEmptyAudioTrack());
         }
 
-        Media.userMedia = media;
-        resolve(media);
+        this.video.srcObject = media;
+        this.video.muted = true;
+        this.video.play();
+
+        const audioTrack = media.getAudioTracks()[0];
+
+        this.video.addEventListener('loadeddata', () => {
+          this.process = false;
+          this.interval = setInterval(Media.processOnMedia, 1000 / this.parent.configs.mediapipe.fps);
+        });
+
+        const processedMedia = this.canvas.captureStream();
+        processedMedia.addTrack(audioTrack);
+
+        Media.userMedia = processedMedia;
+
+        resolve(processedMedia);
         }).catch(error => {
           let message = null;
 
@@ -108,6 +180,60 @@ module.exports = () => {
     });
   }
 
+  Media.processOnMedia = async () => {
+    if (this.process) return;
+
+    this.process = true;
+
+    await drawVideoOnCanvas(this.video, this.canvas);
+
+    if(!this.parent.userSettings.camDisable) {
+      await flipVideoImage(this.canvas);
+
+      if (this.bodySegmenter.blur > 0) {
+        await bodySegmentation.blur(this.bodySegmenter, this.canvas);
+      }
+
+      if (this.faceDetector && this.faceDetector.callbacks.length > 0) {
+        const index =  this.faceDetector.callbacks.findIndex(x => x.enable);
+
+        if (index > -1) {
+          await faceDetection.detect(this.faceDetector, this.canvas);
+
+          this.faceDetector.callbacks.forEach(item => {
+            if(!item.enable || this.faceDetector.positions.length === 0) return;
+            item.callback(this.faceDetector.positions[0].box, this.canvas, item.name);
+          });
+        }
+      }
+    }
+
+    this.process = false;
+  }
+
+  Media.blurBackground = (status = true) => {
+    this.bodySegmenter.blur = (!status)? 0 : 20;
+  }
+
+  /**
+   * Mediapipe face detection callback actions register
+   */
+  Media.registerFaceDetectorCallback = (name, callback) => {
+    let index = this.faceDetector.callbacks.findIndex(x => x.name === name);
+
+    if (index > 0) {
+      this.faceDetector.callbacks[index]['callback'] = callback;
+    } else {
+      index = this.faceDetector.callbacks.push({
+        name: name,
+        enable: false,
+        callback: callback
+      }) - 1;
+    }
+
+    return this.faceDetector.callbacks[index];
+  }
+
   /**
    * Release User Media
    */
@@ -121,6 +247,8 @@ module.exports = () => {
     tracks.forEach((track) => {
       track.stop();
     });
+
+    clearInterval(this.interval);
 
     srcObject = null;
     Media.userMedia = null;
@@ -140,10 +268,12 @@ module.exports = () => {
     });
 
     video.addEventListener('play', () => {
-      Media.events.play.forEach((item) => {
-        if(!item.handler) return false;
-        item.handler(video);
-      });
+      if(!this.events.play && this.events.play.length > 0) {
+        this.events.play.forEach((item) => {
+          if(!item.handler) return false;
+          item.handler(video);
+        });
+      }
     });
   }
 

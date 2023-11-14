@@ -2,7 +2,7 @@ module.exports = () => {
 
   const action = {};
 
-  action.setup = () => {
+  action.setup = (text) => {
     this.lineCount = 4;
     this.fontRatio = 0.05;
     this.fontName = 'Roboto';
@@ -11,6 +11,7 @@ module.exports = () => {
 
     this.x = 0;
     this.y = 0;
+    this.text = text;
     this.textHeight = 0;
     this.startHeight = 60;
     this.lineHeight = 0;
@@ -32,17 +33,23 @@ module.exports = () => {
     this.startHeight = this.canvas.height + 30;
 
 
-    this.debug = document.getElementById('canvas-text-action-counter');
-    this.counter = 0;
-    this.debug.innerHtml = "0";
+  //  this.debug = document.getElementById('canvas-text-action-counter');
+  //  this.counter = 0;
+  //  this.debug.innerHtml = "0";
   }
 
   action.run = (parent, data) => {
 
-
     if (data.attributes.play) {
-      action.setup();
-      this.interval = setInterval(action.renderText, 1000 / this.intervalTime, data.attributes.message);
+      if(data.attributes.initial) {
+        action.setup(data.attributes.message);
+      }
+
+      if(data.attributes.pause) {
+        clearInterval(this.interval);
+      } else {
+        this.interval = setInterval(action.renderText, 1000 / this.intervalTime);
+      }
     } else {
       this.canvas.style.display = 'none';
       this.canvasText.style.display = 'none';
@@ -50,14 +57,15 @@ module.exports = () => {
     }
   }
 
-  action.renderText = (text) => {
+  action.renderText = () => {
       // debug section
+    /*
       this.counter++;
       this.debug.innerHTML = 'Interval: ' + this.counter.toString() + ' | TextHeight: ' + this.textHeight.toString() +
         ' | LineHeight: ' + this.lineHeight.toString() + ' | font: ' + this.fontSize.toString() +
         ' | width: ' + this.canvas.width.toString() + ' | height: ' + this.canvas.height.toString();
       //
-
+    */
       if(this.textHeight == 0) {
         this.y = this.startHeight;
       } else {
@@ -69,7 +77,7 @@ module.exports = () => {
       }
 
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      action.wrapText(text, this.x, this.y);
+      action.wrapText(this.text, this.x, this.y);
   }
 
   action.wrapText = (text, x, y) => {

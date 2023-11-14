@@ -3,7 +3,7 @@
     <h2>Rooms List</h2>
     <div class="rooms-list-table">
       <span
-        class="btn btn-small btn-info"
+        class="btn btn-small"
         :class="{ disabled : loading }"
         @click="getRoomsList"
       >
@@ -12,6 +12,7 @@
       <table v-if="showRooms && !loading">
         <thead>
         <tr>
+          <th>Room Name</th>
           <th>Room ID</th>
           <th>Start Date</th>
         </tr>
@@ -23,6 +24,9 @@
           @click="joinRoom(room._id)"
         >
           <td>
+            {{ room.name }}
+          </td>
+          <td class="text-center">
             {{ room._id }}
           </td>
           <td class="text-center">

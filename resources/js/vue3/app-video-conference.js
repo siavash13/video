@@ -15,17 +15,6 @@ const apiClient = axios.create({
 
 window.axios = apiClient;
 
-/**
- * Face Detect Plugin
- */
-/*
-Promise.all([
-    window.faceAPI.nets.tinyFaceDetector.loadFromUri('/models'),
-    window.faceAPI.nets.faceLandmark68Net.loadFromUri('/models'),
-    window.faceAPI.nets.faceExpressionNet.loadFromUri('/models'),
-    window.faceAPI.nets.faceRecognitionNet.loadFromUri('/models'),
-])
- */
 
 import App from "./App-video-conference.vue";
 

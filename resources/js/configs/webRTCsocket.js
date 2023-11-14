@@ -4,4 +4,11 @@ export default {
   "peer_host": process.env.MIX_PEERJS_HOST || 'localhost',
   "peer_port": process.env.MIX_PEERJS_PORT || '3003',
   "videoconference_theme": process.env.MIX_WEBRTC_THEME || 'Default',
+  "mediapipe": {
+    "models": {
+      "faceDetector": process.env.MIX_WEBRTC_BASE_URL + "/models/face",
+      "bodySegmentation": process.env.MIX_WEBRTC_BASE_URL + "/models/selfie"
+    },
+    "fps": 30
+  }
 }

@@ -42,11 +42,14 @@
 </template>
 
 <script>
+import beepAudio from '../../../assets/webrtc/audio/beep.mp3';
+
 export default {
   name: "ChatModule",
   props: ['webrtc', 'runAction'],
   created() {
     this.setActionEventListener();
+    this.audio = new Audio(beepAudio);
   },
   computed: {
     users() {
@@ -76,6 +79,7 @@ export default {
   },
   data() {
     return {
+      audio: null,
       text: null,
       dialog: false,
       room: null,
@@ -139,6 +143,7 @@ export default {
       }
 
       this.insertMessage(user.name, e.detail.message, e.detail.private);
+      this.audio.play();
     },
     getCurrentTime() {
       let date = new Date;

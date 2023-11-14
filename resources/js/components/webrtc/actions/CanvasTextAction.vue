@@ -4,53 +4,82 @@
       <div class="admin-section" v-if="userSettings.isCreator">
         <div class="text-section">
           <textarea rows="5" v-model="text"></textarea>
-          <span @click.prevent="sendMessage">{{ (!isPlay) ? 'Play' : 'Stop' }}</span>
+          <span
+            v-if="isPlay"
+            @click.prevent="pauseMessage"
+            class="mx-2 c-pointer"
+          >
+            {{ (!isPause) ? 'Pause' : 'Resume' }}
+          </span>
+          <span class="mx-2 c-pointer" @click.prevent="marqueeMessage">{{ (!isPlay) ? 'Play' : 'Stop' }}</span>
         </div>
         <div
-          v-if="historyItems.length > 0"
+          v-if="files.length > 0"
           class="text-history"
         >
           <div
-            v-for="(historyItem, index) in historyItems"
+            v-for="(file, index) in files"
             :key="index"
             class="text-item"
           >
           <span
             class="text-item-text"
-            @click="copyText(historyItem)"
-          >{{ historyItem.substring(0, 20) + ' ...' }}</span>
-            <span class="text-item-remove" @click="removeText(index)"></span>
+            @click="copyText(file.file)"
+          >{{ file.file.split('/').pop() }}</span>
           </div>
         </div>
       </div>
       <div class="canvas-text-action-back" @click="show(false)"></div>
     </div>
     <div id="canvas-text-action-card">
-      <div id="canvas-text-action-counter">0</div>
+      <div id="canvas-text-action-counter" v-if="userSettings.isCreator">
+        <span
+          v-if="isPlay"
+          @click.prevent="pauseMessage"
+          class="mx-2 c-pointer"
+        >
+            {{ (!isPause) ? 'Pause' : 'Resume' }}
+          </span>
+        <span class="mx-2 c-pointer" @click.prevent="marqueeMessage">{{ (!isPlay) ? 'Play' : 'Stop' }}</span>
+      </div>
       <canvas id="canvas-text-scroll-section" height="250"/>
     </div>
   </div>
 </template>
 
 <script>
+import Config from "../../../configs/webRTCsocket";
+import webRTCHelper from "../../../utils/WebRTC/webRTCHelper";
+
 export default {
   name: "CanvasTextAction",
   props: ['room', 'webrtc', 'userSettings'],
+  mixins: [webRTCHelper],
   created() {
-    this.getTextFromStorage();
+    this.getTextFromBucket();
+  },
+  computed: {
+    disabled() {
+      return (!this.text || this.text === '');
+    }
   },
   data() {
     return {
       dialog: false,
+      loading: false,
       text: null,
       isPlay: false,
+      isPause: false,
       historyItems: [],
+      files: [],
       action: {
         name: 'canvas-text',
         moderator: true,
         users: [],
         attributes: {
           play: false,
+          pause: false,
+          initial: false,
           message: null,
         }
       }
@@ -63,8 +92,43 @@ export default {
     run() {
       this.show();
     },
-    copyText(text) {
-      this.text = text;
+    copyText(url) {
+      this.webrtcGetUserToken((token) => {
+        let headers = {
+          'user-token': token
+        };
+
+        axios.get(Config.webrtc_url + "/api/canvas-text-get?key=" + url, {
+          headers: headers
+        }).then(response => {
+          this.text = response.data;
+        });
+      });
+    },
+    getTextFromBucket() {
+      this.loading = true;
+
+      this.webrtcGetUserToken((token) => {
+        let headers = {
+          'user-token': token
+        };
+
+        // this.room.id
+        let roomId = '63413a3b5699a1f2c3549367';
+
+        axios.get(Config.webrtc_url + "/api/canvas-text-list?roomId=" + roomId, {
+          headers: headers
+        }).then(response => {
+          this.files = response.data.files.map(item => {
+            return {
+              file: item,
+              loading: false,
+            }
+          });
+        }).finally(() => {
+          this.loading = false;
+        });
+      });
     },
     getTextFromStorage() {
       let store = JSON.parse(localStorage.getItem('cnidus.videoconference.canvasaction'));
@@ -77,8 +141,30 @@ export default {
       this.historyItems.splice(index, 1);
       this.storeTextInStorage();
     },
-    sendMessage() {
+    getActionObject() {
+      return JSON.parse(JSON.stringify(this.action));
+    },
+    pauseMessage() {
+      if(!this.isPlay) {
+        return false;
+      }
+
+      this.isPause = !this.isPause;
+
+      let action = this.getActionObject();
+      action.attributes.play = true;
+      action.attributes.pause = this.isPause;
+
+      this.webrtc.runAction(this.room.id, action);
+      this.show(false);
+    },
+    marqueeMessage() {
+      if(this.disabled && !this.isPlay) {
+        return false;
+      }
+
       this.isPlay = !this.isPlay;
+      this.isPause = false;
 
       // store in storage
       if (this.isPlay) {
@@ -89,9 +175,13 @@ export default {
         }
       }
 
-      let action = Object.assign({}, this.action);
+      let action = this.getActionObject();
       action.attributes.play = this.isPlay;
       action.attributes.message = this.text;
+
+      if(this.isPlay) {
+        action.attributes.initial = true;
+      }
 
       this.webrtc.runAction(this.room.id, action);
       this.show(false);

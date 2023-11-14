@@ -46,6 +46,7 @@ class VideoConferenceServiceProvider extends ServiceProvider
     {
         $this->publishes([
             __DIR__.'/../resources/js/App-video-conference.vue' => resource_path('js/App-video-conference.vue'),
+            __DIR__.'/../resources/js/assets/webrtc/audio/beep.mp3' => resource_path('js/assets/webrtc/audio/beep.mp3'),
             __DIR__.'/../resources/js/assets/webrtc/fonts/Roboto/roboto-light.eot' => resource_path('js/assets/webrtc/fonts/Roboto/roboto-light.eot'),
             __DIR__.'/../resources/js/assets/webrtc/fonts/Roboto/roboto-light.svg' => resource_path('js/assets/webrtc/fonts/Roboto/roboto-light.svg'),
             __DIR__.'/../resources/js/assets/webrtc/fonts/Roboto/roboto-light.ttf' => resource_path('js/assets/webrtc/fonts/Roboto/roboto-light.rrf'),
@@ -74,11 +75,14 @@ class VideoConferenceServiceProvider extends ServiceProvider
             __DIR__.'/../resources/js/utils/WebRTC/actions/chatAction.js' => resource_path('js/utils/WebRTC/actions/chatAction.js'),
             __DIR__.'/../resources/js/utils/WebRTC/actions/canvasTextAction.js' => resource_path('js/utils/WebRTC/actions/canvasTextAction.js'),
             __DIR__.'/../resources/js/utils/WebRTC/actions/faceApiAction.js' => resource_path('js/utils/WebRTC/actions/faceApiAction.js'),
+            __DIR__.'/../resources/js/utils/WebRTC/actions/muteUserMicAction.js' => resource_path('js/utils/WebRTC/actions/muteUserMicAction.js'),
             __DIR__.'/../resources/js/utils/WebRTC/actions/terminateAction.js' => resource_path('js/utils/WebRTC/actions/terminateAction.js'),
             __DIR__.'/../resources/js/utils/WebRTC/modules/Events.js' => resource_path('js/utils/WebRTC/modules/Events.js'),
             __DIR__.'/../resources/js/utils/WebRTC/modules/Media.js' => resource_path('js/utils/WebRTC/modules/Media.js'),
             __DIR__.'/../resources/js/utils/WebRTC/modules/People.js' => resource_path('js/utils/WebRTC/modules/People.js'),
             __DIR__.'/../resources/js/utils/WebRTC/modules/Room.js' => resource_path('js/utils/WebRTC/modules/Room.js'),
+            __DIR__.'/../resources/js/utils/WebRTC/modules/MediapipeBodySegment.js' => resource_path('js/utils/WebRTC/modules/MediapipeBodySegment.js'),
+            __DIR__.'/../resources/js/utils/WebRTC/modules/MediapipeFaceDetect.js' => resource_path('js/utils/WebRTC/modules/MediapipeFaceDetect.js'),
             __DIR__.'/../resources/js/utils/WebRTC/PeerJs.js' => resource_path('js/utils/WebRTC/PeerJs.js'),
             __DIR__.'/../resources/js/utils/WebRTC/Socket.js' => resource_path('js/utils/WebRTC/Socket.js'),
             __DIR__.'/../resources/js/utils/WebRTC/WebRTC.js' => resource_path('js/utils/WebRTC/WebRTC.js'),
@@ -89,6 +93,34 @@ class VideoConferenceServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../resources/js/components/webrtc/VideoConferenceActions.vue' => resource_path('js/components/webrtc/VideoConferenceActions.vue'),
         ], 'videoconference-vue');
+
+        $this->publishes([
+            __DIR__.'/../resources/models/face/face_detection_full.binarypb' => public_path('models/face/face_detection_full.binarypb'),
+            __DIR__.'/../resources/models/face/face_detection_full_range.tflite' => public_path('models/face/face_detection_full_range.tflite'),
+            __DIR__.'/../resources/models/face/face_detection_full_range_sparse.tflite' => public_path('models/face/face_detection_full_range_sparse.tflite'),
+            __DIR__.'/../resources/models/face/face_detection_short.binarypb' => public_path('models/face/face_detection_short.binarypb'),
+            __DIR__.'/../resources/models/face/face_detection_short_range.tflite' => public_path('models/face/face_detection_short_range.tflite'),
+            __DIR__.'/../resources/models/face/face_detection_solution_simd_wasm_bin.data' => public_path('models/face/face_detection_solution_simd_wasm_bin.data'),
+            __DIR__.'/../resources/models/face/face_detection_solution_simd_wasm_bin.js' => public_path('models/face/face_detection_solution_simd_wasm_bin.js'),
+            __DIR__.'/../resources/models/face/face_detection_solution_simd_wasm_bin.wasm' => public_path('models/face/face_detection_solution_simd_wasm_bin.wasm'),
+            __DIR__.'/../resources/models/face/face_detection_solution_wasm_bin.js' => public_path('models/face/face_detection_solution_wasm_bin.js'),
+            __DIR__.'/../resources/models/face/face_detection_solution_wasm_bin.wasm' => public_path('models/face/face_detection_solution_wasm_bin.wasm'),
+            __DIR__.'/../resources/models/face/face_expression_model-shard1' => public_path('models/face/face_expression_model-shard1'),
+            __DIR__.'/../resources/models/face/face_expression_model-weights_manifest.json' => public_path('models/face/face_expression_model-weights_manifest.json'),
+            __DIR__.'/../resources/models/face/face_landmark_68_model-shard1' => public_path('models/face/face_landmark_68_model-shard1'),
+            __DIR__.'/../resources/models/face/face_landmark_68_model-weights_manifest.json' => public_path('models/face/face_landmark_68_model-weights_manifest.json'),
+            __DIR__.'/../resources/models/face/face_landmark_68_tiny_model-shard1' => public_path('models/face/face_landmark_68_tiny_model-shard1'),
+            __DIR__.'/../resources/models/face/face_landmark_68_tiny_model-weights_manifest.json' => public_path('models/face/face_landmark_68_tiny_model-weights_manifest.json'),
+            __DIR__.'/../resources/models/face/face_recognition_model-shard1' => public_path('models/face/face_recognition_model-shard1'),
+            __DIR__.'/../resources/models/face/face_recognition_model-shard2' => public_path('models/face/face_recognition_model-shard2'),
+            __DIR__.'/../resources/models/face/face_recognition_model-weights_manifest.json' => public_path('models/face/face_recognition_model-weights_manifest.json'),
+            __DIR__.'/../resources/models/face/tiny_face_detector_model-shard1' => public_path('models/face/tiny_face_detector_model-shard1'),
+            __DIR__.'/../resources/models/face/tiny_face_detector_model-weights_manifest.json' => public_path('models/face/tiny_face_detector_model-weights_manifest.json'),
+            __DIR__.'/../resources/models/selfie/selfie_segmentation.binarypb' => public_path('models/selfie/selfie_segmentation.binarypb'),
+            __DIR__.'/../resources/models/selfie/selfie_segmentation.tflite' => public_path('models/selfie/selfie_segmentation.tflite'),
+            __DIR__.'/../resources/models/selfie/selfie_segmentation_solution_simd_wasm_bin.js' => public_path('models/selfie/selfie_segmentation_solution_simd_wasm_bin.js'),
+            __DIR__.'/../resources/models/selfie/selfie_segmentation_solution_simd_wasm_bin.wasm' => public_path('models/selfie/selfie_segmentation_solution_simd_wasm_bin.wasm'),
+        ], 'mediapipe-models');
     }
 
     public function registerVue2AssetsPublish()
