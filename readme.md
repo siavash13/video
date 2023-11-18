@@ -13,9 +13,27 @@ Via Composer
 
 ``` bash
 $ composer require codenidus/video-conference
+php artisan videoconference:install
 ```
 
 ## Usage
+
+#### .env variables
+```
+SYSTEM_BASE_ADDRESS="client app address"
+
+MIX_VUE_APP_NAME="Project Name"
+MIX_VUE_APP_API_URL="http://${SYSTEM_BASE_ADDRESS}/api/"
+MIX_WEBRTC_THEME="Canvasface"
+MIX_WEBRTC_BASE_URL="http://${SYSTEM_BASE_ADDRESS}"
+MIX_WEBRTC_SOCKET_CONNECTION="http://${SYSTEM_BASE_ADDRESS}:5000"
+MIX_PEERJS_HOST="${SYSTEM_BASE_ADDRESS}"
+MIX_PEERJS_PORT=3003
+
+VIDEOCONFERENCE_APP_ID="Project id"
+VIDEOCONFERENCE_APP_SECRET="App Secret Token"
+VIDEOCONFERENCE_APP_CLIENT="App Client Token"
+```
 
 ## Change log
 
