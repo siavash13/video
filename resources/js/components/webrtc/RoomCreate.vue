@@ -27,6 +27,14 @@
         />
       </div>
       <div>
+        <label>Authorisable:</label>
+        <input
+          type="checkbox"
+          v-model="room.authorisable"
+          :value="true"
+        />
+      </div>
+      <div>
         <input v-if="!loading" type="submit" value="Create Room"/>
         <span v-else>Please wait ...</span>
       </div>
@@ -61,6 +69,7 @@ export default {
         moderator: 'moderator',
         start_time: '2022-08-06 08:30:00',
         end_time: '2022-08-06 08:31:00',
+        authorisable: false,
       },
       roomMinTime: '2022-08-06 08:30:00',
       message: {
@@ -138,6 +147,10 @@ export default {
     label {
       width: 120px;
       display: inline-block;
+    }
+
+    input[type=checkbox] {
+      min-width: 200px;
     }
 
     input[type=text] {

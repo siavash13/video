@@ -24,14 +24,14 @@ class Webrtc
     this.options.micMute = false;
   }
 
-  setup({ options, callback, connections, userSettings }) {
+  setup({ options, callback, connections, waitingList, userSettings }) {
     this.options = Object.assign(this.options, options);
     this.callback = Object.assign(this.callback, callback);
     this.userSettings = userSettings;
 
     this.Room.setup(this, options);
     this.Media.setup(this, options);
-    this.People.setup(this, connections, options.remoteVideoRef, options.remoteAudioRef);
+    this.People.setup(this, connections, waitingList, options);
   }
 
   async initial(options) {

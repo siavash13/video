@@ -239,18 +239,22 @@ module.exports = () => {
    */
   Media.release = () => {
     let videoRef = document.getElementById(this.options.localVideoRef);
-    let srcObject = videoRef.srcObject;
 
-    const stream = srcObject;
-    const tracks = stream.getTracks();
+    if (videoRef) {
+      let srcObject = videoRef.srcObject;
 
-    tracks.forEach((track) => {
-      track.stop();
-    });
+      const stream = srcObject;
+      const tracks = stream.getTracks();
+
+      tracks.forEach((track) => {
+        track.stop();
+      });
+
+      srcObject = null;
+    }
 
     clearInterval(this.interval);
 
-    srcObject = null;
     Media.userMedia = null;
   }
 

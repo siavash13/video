@@ -92,7 +92,10 @@
       </div>
       <div v-else>
         <div v-if="roomIsValid">
-          <p v-if="!connectionFailed">Please wait for establishing a connection...</p>
+          <div v-if="!connectionFailed">
+            <p v-if="!waiting">Please wait for establishing a connection...</p>
+            <p v-else>Please wait until host admit you to join room...</p>
+          </div>
           <div v-else class="error">
             <div v-if="peerJsFailed" >
               Sorry! apparently server doesn't respond, please contact with administration.
@@ -125,10 +128,12 @@
       }"
       :camDisable="camDisable"
       :micDisable="micDisable"
+      :waiting="waiting"
       @onConnectionInitialed="connectionInitialed"
       @onAuthorizeRoomInvalid="authorizeRoomInvalid"
       @onPeerJsConnectionFailed="peerJsConnectionFailed"
       @onCloseConference="closeConference"
+      @onSetWaitingStatus="setWaitingStatus"
     />
   </div>
 </template>
@@ -209,6 +214,7 @@ export default {
         color: 'green'
       },
       loading: false,
+      waiting: false,
       startConnecting: false,
       roomIsValid: true,
       peerJsFailed: false,
@@ -242,6 +248,9 @@ export default {
     startEstablishingConnection() {
       this.$refs.conference.startEstablishingConnection();
     },
+    setWaitingStatus(status) {
+      this.waiting = status;
+    }
   },
   components: {
     VideoConference,

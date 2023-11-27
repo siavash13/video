@@ -18,6 +18,7 @@
         <PeopleModule
           ref="modules[people]"
           :webrtc="$webrtc"
+		  :waitingList="waitingList"
           :runAction="commands.run"
         />
       </template>
@@ -49,9 +50,10 @@ export default {
   name: "VideoConference",
   async created() {
     await this.setThemeLayout();
+    window.addEventListener('onWaitUntilAdmit', this.eventHandlerWaitUntilHostAdmit);
     window.addEventListener('onConnectToRoomSuccess', this.eventHandlerConnectToRoomSuccess);
   },
-  props: ['name', 'devices', 'camDisable', 'micDisable'],
+  props: ['name', 'devices', 'camDisable', 'micDisable', 'waiting'],
   data() {
     return {
       room: null,
@@ -64,6 +66,7 @@ export default {
       attemptCount: 0,
       roomIsValid: true,
       connections: [],
+	  waitingList: [],
       userSettings: {
         isCreator: false,
       },
@@ -126,6 +129,7 @@ export default {
         this.$webrtc.setup({
           options: {
             name: this.name,
+			roomId: this.room.id,
             localVideoRef: 'video-item',
             remoteVideoRef: 'remote-video',
             remoteAudioRef: 'remote-audio',
@@ -138,6 +142,7 @@ export default {
             banInRoom: this.banInRoom,
           },
           connections: this.connections,
+		  waitingList: this.waitingList,
           userSettings: this.userSettings,
         });
 
@@ -159,7 +164,7 @@ export default {
       this.establishingConnection();
     },
     establishingConnection() {
-      if (this.isReady) {
+      if(this.isReady || this.waiting) {
         return;
       }
 
@@ -238,18 +243,26 @@ export default {
       this.loading = false;
       this.isReady = true;
 	  
-	    this.$emit('onConnectionInitialed', data.detail);
+	  this.$emit('onSetWaitingStatus', true);
+	  this.$emit('onConnectionInitialed', data.detail);
+	  
+	  if(data.detail.waitList && data.detail.waitList.length > 0) {
+        this.waitingList = data.detail.waitList
+      }
 
       this.$nextTick(async () => {
         await this.$webrtc.startStreamUserMedia();
         this.$webrtc.Room.notifyJoinSuccess(this.room.id);
       });
-    }
+    },
+	eventHandlerWaitUntilHostAdmit() {
+      this.$emit('onSetWaitingStatus', true);
+    },
   },
   beforeUnmount() {
     this.leftTheRoom();
-    window.removeEventListener('onRoomInformationReceived',
-        this.eventHandlerConnectToRoomSuccess);
+    window.removeEventListener('onWaitUntilAdmit', this.eventHandlerWaitUntilHostAdmit);
+    window.removeEventListener('onConnectToRoomSuccess', this.eventHandlerConnectToRoomSuccess);
   },
   components: {
     ChatModule,

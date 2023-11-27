@@ -39,7 +39,37 @@
               </div>
             </div>
           </div>
+          <div
+            v-if="waitingList.length > 0"
+            v-show="showWaitList"
+            class="waitingList"
+          >
+            <hr/>
+            <div
+              v-for="(waiting, index) in waitingList"
+              :key="index"
+              class="waitingList-item"
+            >
+              <span>{{ waiting.name }}</span>
+              <div>
+                <span
+                  class="btn"
+                  @click="responseWaiting(true, waiting, index)"
+                >
+                  approve
+                </span>
+                <span
+                  class="btn"
+                  @click="responseWaiting(false, waiting, index)"
+                >
+                  denied
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
+
+
       </div>
     </div>
     <div class="people-module-back" @click="show(false)"></div>
@@ -47,11 +77,16 @@
 </template>
 
 <script>
+import admitAudio from '../../../assets/webrtc/audio/admit.mp3';
+
 export default {
   name: "PeopleModule",
-  props: ['webrtc', 'runAction'],
+  props: ['webrtc', 'runAction', 'waitingList'],
   created() {
     this.setClickEventListener();
+    this.audio = new Audio(admitAudio);
+    window.addEventListener('onRequestToAdmit', this.eventHandlerRequestToAdmit);
+    window.addEventListener('onCancelForAdmit', this.eventHandlerCancelForAdmit);
   },
   computed: {
     users() {
@@ -81,25 +116,28 @@ export default {
       if (index < 0) {
         this.selectedUser = null;
       }
-    }
+    },
   },
   data() {
     return {
+      audio: null,
       dialog: false,
       room: null,
-      usersMenu : [],
+      usersMenu: [],
+      showWaitList: true,
     }
   },
   methods: {
     show(status = true) {
       this.dialog = status;
+      this.webrtc.userSettings.newAdmitRequest = false;
     },
     open(room) {
       this.room = room;
       this.show();
     },
     hideMenu(event) {
-      if(!event.target.matches('.dropdown-content') &&
+      if (!event.target.matches('.dropdown-content') &&
         this.$refs.dropdown &&
         this.$refs.dropdown.length > 0
       ) {
@@ -108,9 +146,9 @@ export default {
         });
       }
 
-      if(event.target.matches('.dropdown-dots')) {
+      if (event.target.matches('.dropdown-dots')) {
         event.target.parentElement.childNodes.forEach(node => {
-          if(node.classList.contains('dropdown-content') && !node.classList.contains('show')) {
+          if (node.classList.contains('dropdown-content') && !node.classList.contains('show')) {
             node.classList.add('show');
           }
         })
@@ -139,10 +177,37 @@ export default {
       });
 
       user.openMenu = false;
+    },
+    responseWaiting(status = false, user, index) {
+      this.runAction('admit', {
+        status: status,
+        roomId: this.room.id,
+        peerJsId: user.peerJsId,
+      });
+
+      this.showWaitList = false;
+      this.webrtc.People.removeFromWaitingList(index);
+
+      this.$nextTick(() => {
+        this.showWaitList = true;
+      });
+    },
+    eventHandlerRequestToAdmit() {
+      this.audio.play();
+      if(!this.dialog) {
+        this.webrtc.userSettings.newAdmitRequest = true;
+      }
+    },
+    eventHandlerCancelForAdmit() {
+      if(this.waitingList.length === 0) {
+        this.webrtc.userSettings.newAdmitRequest = false;
+      }
     }
   },
   unmounted() {
     window.removeEventListener('click', this.hideMenu);
+    window.removeEventListener('onRequestToAdmit', this.eventHandlerRequestToAdmit);
+    window.removeEventListener('onCancelForAdmit', this.eventHandlerCancelForAdmit);
   }
 }
 </script>
@@ -188,6 +253,22 @@ export default {
 
           li {
             cursor: pointer;
+          }
+        }
+      }
+
+      .waitingList {
+        margin-top: 15px;
+
+        .waitingList-item {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 10px;
+
+          .btn {
+            font-size: 0.9em;
+            padding: 5px 10px;
+            margin: 0 2px;
           }
         }
       }

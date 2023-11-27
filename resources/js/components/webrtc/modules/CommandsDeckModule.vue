@@ -70,6 +70,7 @@
 
       <a
         class="btn btn-default btn-action"
+        :class="{ notify: userSettings.newMessage }"
         @click.prevent="commands.open('chat')"
       >
         <span class="tooltip top">
@@ -84,6 +85,7 @@
 
       <a
         class="btn btn-default btn-action"
+        :class="{ notify: userSettings.newAdmitRequest }"
         @click.prevent="commands.open('people')"
       >
         <span class="tooltip top">
@@ -152,11 +154,29 @@ export default {
   div {
     padding: 10px;
 
-    @media (max-width: 480px) {
-      .btn {
+    .btn {
+
+      &.notify {
+        &:after {
+          position: absolute;
+          display: inline-block;
+          content: "";
+          top: 0;
+          right: 0;
+          width: 12px;
+          height: 12px;
+          background: #ea4335;
+          border-radius: 50%;
+        }
+      }
+
+      @media (max-width: 480px) {
         padding: 5px 8px;
       }
+
     }
+
+
   }
 }
 </style>

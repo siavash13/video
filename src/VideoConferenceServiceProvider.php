@@ -46,8 +46,10 @@ class VideoConferenceServiceProvider extends ServiceProvider
     {
         $this->publishes([
             __DIR__.'/../resources/js/App-video-conference.vue' => resource_path('js/App-video-conference.vue'),
+            __DIR__.'/../resources/js/assets/webrtc/audio/admit.mp3' => resource_path('js/assets/webrtc/audio/admit.mp3'),
             __DIR__.'/../resources/js/assets/webrtc/audio/beep.mp3' => resource_path('js/assets/webrtc/audio/beep.mp3'),
             __DIR__.'/../resources/js/assets/webrtc/fonts/Roboto/roboto-light.eot' => resource_path('js/assets/webrtc/fonts/Roboto/roboto-light.eot'),
+            __DIR__.'/../resources/js/assets/webrtc/fonts/Roboto/roboto-light.rrf' => resource_path('js/assets/webrtc/fonts/Roboto/roboto-light.rrf'),
             __DIR__.'/../resources/js/assets/webrtc/fonts/Roboto/roboto-light.svg' => resource_path('js/assets/webrtc/fonts/Roboto/roboto-light.svg'),
             __DIR__.'/../resources/js/assets/webrtc/fonts/Roboto/roboto-light.ttf' => resource_path('js/assets/webrtc/fonts/Roboto/roboto-light.rrf'),
             __DIR__.'/../resources/js/assets/webrtc/fonts/Roboto/roboto-light.woff' => resource_path('js/assets/webrtc/fonts/Roboto/roboto-light.woff'),
@@ -59,6 +61,7 @@ class VideoConferenceServiceProvider extends ServiceProvider
             __DIR__.'/../resources/js/components/webrtc/Rooms.vue' => resource_path('js/components/webrtc/Rooms.vue'),
             __DIR__.'/../resources/js/components/webrtc/RoomCreate.vue' => resource_path('js/components/webrtc/RoomCreate.vue'),
             __DIR__.'/../resources/js/components/webrtc/RoomsList.vue' => resource_path('js/components/webrtc/RoomsList.vue'),
+            __DIR__.'/../resources/js/components/webrtc/actions/AdmitAction.vue' => resource_path('js/components/webrtc/actions/AdmitAction.vue'),
             __DIR__.'/../resources/js/components/webrtc/actions/BanAction.vue' => resource_path('js/components/webrtc/actions/BanAction.vue'),
             __DIR__.'/../resources/js/components/webrtc/actions/CanvasTextAction.vue' => resource_path('js/components/webrtc/actions/CanvasTextAction.vue'),
             __DIR__.'/../resources/js/components/webrtc/actions/FaceApiAction.vue' => resource_path('js/components/webrtc/actions/FaceApiAction.vue'),
@@ -71,6 +74,7 @@ class VideoConferenceServiceProvider extends ServiceProvider
             __DIR__.'/../resources/js/components/webrtc/modules/PeopleModule.vue' => resource_path('js/components/webrtc/modules/PeopleModule.vue'),
             __DIR__.'/../resources/js/components/webrtc/modules/CommandsDeckModule.vue' => resource_path('js/components/webrtc/modules/CommandsDeckModule.vue'),
             __DIR__.'/../resources/js/router/webrtc.js' => resource_path('js/router/webrtc.js'),
+            __DIR__.'/../resources/js/utils/WebRTC/actions/admitAction.js' => resource_path('js/utils/WebRTC/actions/admitAction.js'),
             __DIR__.'/../resources/js/utils/WebRTC/actions/banAction.js' => resource_path('js/utils/WebRTC/actions/banAction.js'),
             __DIR__.'/../resources/js/utils/WebRTC/actions/chatAction.js' => resource_path('js/utils/WebRTC/actions/chatAction.js'),
             __DIR__.'/../resources/js/utils/WebRTC/actions/canvasTextAction.js' => resource_path('js/utils/WebRTC/actions/canvasTextAction.js'),

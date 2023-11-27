@@ -3,12 +3,14 @@ module.exports = () => {
   const People = {
     parent: null,
     connections: null,
+    waitingList: null,
     options: null,
   }
 
-  People.setup = (parent, connections, options) => {
+  People.setup = (parent, connections, waitingList, options) => {
     this.parent = parent;
     this.connections = connections;
+    this.waitingList = waitingList;
     this.options = options;
   }
 
@@ -79,6 +81,24 @@ module.exports = () => {
 
   People.getConnections = () => {
     return this.connections;
+  }
+
+  People.addToWaitingList = (data) => {
+    this.waitingList.push(data);
+  }
+
+  People.removeFromWaitingList = (index) => {
+    if(index > -1) {
+      this.waitingList.splice(index, 1);
+    }
+  }
+
+  People.removeFromWaitingListByPeerJsId = (peerJsId) => {
+    const index = this.waitingList.findIndex(x => x.peerJsId === peerJsId);
+
+    if(index > -1) {
+      this.waitingList.splice(index, 1);
+    }
   }
 
   return People;

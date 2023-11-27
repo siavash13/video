@@ -48,6 +48,14 @@
     :userSettings="userSettings"
   />
 
+  <AdmitAction
+    ref="actions[admit]"
+    class="action"
+    :room="room"
+    :webrtc="webrtc"
+    :userSettings="userSettings"
+  />
+
 </div>
 </template>
 
@@ -58,6 +66,7 @@ import MultiAction from "./actions/MultiAction";
 import CanvasTextAction from "./actions/CanvasTextAction";
 import FaceApiAction from "./actions/FaceApiAction";
 import MuteUserMicAction from "./actions/MuteUserMicAction";
+import AdmitAction from "./actions/AdmitAction";
 
 export default {
   name: "VideoConferenceActions",
@@ -76,6 +85,7 @@ export default {
     CanvasTextAction,
     FaceApiAction,
     MuteUserMicAction,
+    AdmitAction,
   }
 }
 </script>

@@ -1,6 +1,6 @@
 {
     "name": "codenidus/video-conference",
-    "description": ":package_description",
+    "description": ":Video Conference laravel/vue package",
     "license": "MIT",
     "authors": [
         {

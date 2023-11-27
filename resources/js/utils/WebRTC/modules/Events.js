@@ -13,6 +13,34 @@ module.exports = () => {
   }
 
   Events.listen = () => {
+    this.socket.on('wait-accept-room-join', (data) => {
+      const event = new CustomEvent('onWaitUntilAdmit', {
+        detail: data
+      });
+
+      window.dispatchEvent(event);
+    });
+
+    this.socket.on('admit-user-to-join', (data) => {
+      this.parent.People.addToWaitingList(data);
+
+      const event = new CustomEvent('onRequestToAdmit', {
+        detail: data
+      });
+
+      window.dispatchEvent(event);
+    });
+
+    this.socket.on('remove-user-from-waiting-list', (data) => {
+      this.parent.People.removeFromWaitingListByPeerJsId(data.peerJsId);
+
+      const event = new CustomEvent('onCancelForAdmit', {
+        detail: data
+      });
+
+      window.dispatchEvent(event);
+    });
+
     this.socket.on('connect-room-success', (data) => {
       const event = new CustomEvent('onConnectToRoomSuccess', {
         detail: data
@@ -20,6 +48,8 @@ module.exports = () => {
 
       window.dispatchEvent(event);
     });
+
+
 
     this.socket.on('room-information', (data) => {
       this.parent.Room.information = data;

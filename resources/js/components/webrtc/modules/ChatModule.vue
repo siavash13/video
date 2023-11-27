@@ -103,6 +103,7 @@ export default {
 
       if(status) {
         this.$refs.messages.scrollTop = this.$refs.messages.scrollHeight;
+        this.webrtc.userSettings.newMessage = false;
       }
     },
     open(room) {
@@ -144,6 +145,10 @@ export default {
 
       this.insertMessage(user.name, e.detail.message, e.detail.private);
       this.audio.play();
+
+      if(!this.dialog) {
+        this.webrtc.userSettings.newMessage = true;
+      }
     },
     getCurrentTime() {
       let date = new Date;
