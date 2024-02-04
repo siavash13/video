@@ -1,7 +1,7 @@
 <template>
 <div id="videoConferenceActions">
   <BanAction
-    ref="actions[ban]"
+    :ref="(obj) => { setAction('ban', obj) }"
     class="action"
     :room="room"
     :webrtc="webrtc"
@@ -9,7 +9,7 @@
   />
 
   <TerminateAction
-    ref="actions[terminate]"
+    :ref="(obj) => { setAction('terminate', obj) }"
     class="action"
     :room="room"
     :webrtc="webrtc"
@@ -17,7 +17,7 @@
   />
 
   <MultiAction
-    ref="actions[multi]"
+    :ref="(obj) => { setAction('multi', obj) }"
     class="action"
     :room="room"
     :webrtc="webrtc"
@@ -25,7 +25,7 @@
   />
 
   <CanvasTextAction
-    ref="actions[canvas-text]"
+    :ref="(obj) => { setAction('canvas-text', obj) }"
     class="action"
     :room="room"
     :webrtc="webrtc"
@@ -33,7 +33,7 @@
   />
 
   <FaceApiAction
-    ref="actions[face-api]"
+    :ref="(obj) => { setAction('face-api', obj) }"
     class="action"
     :room="room"
     :webrtc="webrtc"
@@ -41,7 +41,7 @@
   />
 
   <MuteUserMicAction
-    ref="actions[mute-user-mic]"
+    :ref="(obj) => { setAction('mute-user-mic', obj) }"
     class="action"
     :room="room"
     :webrtc="webrtc"
@@ -49,7 +49,7 @@
   />
 
   <AdmitAction
-    ref="actions[admit]"
+    :ref="(obj) => { setAction('admit', obj) }"
     class="action"
     :room="room"
     :webrtc="webrtc"
@@ -59,35 +59,50 @@
 </div>
 </template>
 
-<script>
-import BanAction from "./actions/BanAction";
-import TerminateAction from "./actions/TerminateAction";
-import MultiAction from "./actions/MultiAction";
-import CanvasTextAction from "./actions/CanvasTextAction";
-import FaceApiAction from "./actions/FaceApiAction";
-import MuteUserMicAction from "./actions/MuteUserMicAction";
-import AdmitAction from "./actions/AdmitAction";
+<script setup>
+import { defineProps, defineExpose, ref } from 'vue'
 
-export default {
-  name: "VideoConferenceActions",
-  props: ['room', 'webrtc', 'connections', 'userSettings'],
-  methods: {
-    runAction(action) {
-      const actionName = this.webrtc.camelToKebab(action.name);
-      const actionRefName = 'actions[' + actionName + ']';
-      this.$refs[actionRefName].run(this.room, action.data || {});
-    },
+import BanAction from './actions/BanAction.vue'
+import TerminateAction from './actions/TerminateAction.vue'
+import MultiAction from './actions/MultiAction.vue'
+import CanvasTextAction from './actions/CanvasTextAction.vue'
+import FaceApiAction from './actions/FaceApiAction.vue'
+import MuteUserMicAction from './actions/MuteUserMicAction.vue'
+import AdmitAction from './actions/AdmitAction.vue'
+
+const props = defineProps({
+  webrtc: {
+    type: Object,
+    required: true
   },
-  components: {
-    BanAction,
-    TerminateAction,
-    MultiAction,
-    CanvasTextAction,
-    FaceApiAction,
-    MuteUserMicAction,
-    AdmitAction,
-  }
+  room: {
+    type: Object,
+    required: true
+  },
+  userSettings: {
+    type: Object,
+    required: true
+  },
+  connections: {
+    type: Array,
+    required: true
+  },
+})
+
+const actions = ref({})
+
+const setAction = (name, object) => {
+  actions.value[name] = object
 }
+
+const runAction = (action) => {
+  const actionName = props.webrtc.camelToKebab(action.name)
+  actions.value[actionName].run(props.room, action.data || {})
+}
+
+defineExpose({
+  runAction
+})
 </script>
 
 <style lang="scss">

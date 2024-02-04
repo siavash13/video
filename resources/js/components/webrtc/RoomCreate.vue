@@ -46,86 +46,84 @@
   </div>
 </template>
 
-<script>
-import socketConfig from "../../configs/webRTCsocket";
+<script setup>
+import { ref, defineProps } from 'vue'
+import axios from '../../utils/Webrtc/Axios'
+
+const apiClient = axios.getInstance()
+
+const props = defineProps({
+  token: {
+    type: String,
+    required: true
+  }
+})
 
 
-export default {
-  name: "RoomCreate",
-  props: ['token'],
-  created() {
-    this.setRoomStartEndTime();
-  },
-  computed: {
-    baseUrl() {
-      return socketConfig.webrtc_url + '/api/rooms';
-    }
-  },
-  data() {
-    return {
-      loading: false,
-      room: {
-        name: null,
-        moderator: 'moderator',
-        start_time: '2022-08-06 08:30:00',
-        end_time: '2022-08-06 08:31:00',
-        authorisable: false,
-      },
-      roomMinTime: '2022-08-06 08:30:00',
-      message: {
-        status: false,
-        text: '',
-        type: 'success'
-      }
-    }
-  },
-  methods: {
-    createRoom(e) {
-      e.preventDefault();
-      this.message.status = false;
-      let headers = {
-        'user-token': this.token
-      };
+const loading = ref(false)
+const room = ref({
+  name: null,
+  moderator: 'moderator',
+  start_time: '2022-08-06 08:30:00',
+  end_time: '2022-08-06 08:31:00',
+  authorisable: false,
+})
+const roomMinTime = ref('2022-08-06 08:30:00')
+const message = ref({
+  status: false,
+  text: '',
+  type: 'success'
+})
 
-      if (!(this.room.name && this.room.moderator && this.room.start_time && this.room.end_time)) {
-        this.message.type = 'error';
-        this.message.text = 'Please fill all required fields.';
-        this.message.status = true;
-        return false;
-      }
+const createRoom = (e) => {
+  e.preventDefault()
+  message.value.status = false
+  let headers = {
+    'user-token': props.token
+  }
 
-      this.loading = true;
+  if (!(room.value.name && room.value.moderator && room.value.start_time && room.value.end_time)) {
+    message.value.type = 'error'
+    message.value.text = 'Please fill all required fields.'
+    message.value.status = true
+    return false
+  }
 
-      axios.post(this.baseUrl, this.room, {
-        headers: headers
-      }).then(response => {
-        this.message.type = 'success';
-        this.message.text = 'Room created successfully! Room Id is: ' + response.data.room.id;
-      }, error => {
-        this.message.type = 'error';
-        this.message.text = 'Error happened! ' + error.response.data.message;
-      }).finally(() => {
-        this.loading = false;
-        this.message.status = true;
-      });
-    },
-    setRoomStartEndTime() {
-      this.roomMinTime = this.setDateTimeFormat();
-      this.room.start_time = this.setDateTimeFormat(1);
-      this.room.end_time = this.setDateTimeFormat(10);
-    },
-    setDateTimeFormat(minutes = 0) {
-      let dateTime = null;
-      let dateObject = new Date(Date.now());
+  loading.value = true
 
-      dateObject.setDate(dateObject.getDate() + 2);
-      dateObject.setMinutes(dateObject.getMinutes() + minutes);
-      dateTime = dateObject.toISOString();
-
-      return dateTime.substring(0, dateTime.indexOf("T") + 6);
-    }
-  },
+  apiClient.post('/api/rooms', room.value, {
+    headers: headers
+  }).then(response => {
+    message.value.type = 'success'
+    message.value.text = 'Room created successfully! Room Id is: ' + response.data.room.id
+  }, error => {
+    message.value.type = 'error'
+    message.value.text = 'Error happened! ' + error.response.data.message
+  }).finally(() => {
+    loading.value = false
+    message.value.status = true
+  })
 }
+
+const setRoomStartEndTime = () => {
+  roomMinTime.value = setDateTimeFormat()
+  room.value.start_time = setDateTimeFormat(1)
+  room.value.end_time = setDateTimeFormat(10)
+}
+
+const setDateTimeFormat = (minutes = 0) => {
+  let dateTime
+  let dateObject = new Date(Date.now())
+
+  dateObject.setDate(dateObject.getDate() + 2)
+  dateObject.setMinutes(dateObject.getMinutes() + minutes)
+  dateTime = dateObject.toISOString()
+
+  return dateTime.substring(0, dateTime.indexOf("T") + 6)
+}
+
+
+setRoomStartEndTime()
 </script>
 
 <style lang="scss">

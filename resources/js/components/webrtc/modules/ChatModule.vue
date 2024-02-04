@@ -6,7 +6,7 @@
         <span class="close" @click="show(false)"></span>
       </div>
       <div class="chat-section-interface">
-        <div class="messages" ref="messages">
+        <div class="messages" ref="messagesBox">
           <div
             v-for="(message, index) in messages"
             :key="index"
@@ -41,145 +41,158 @@
   </div>
 </template>
 
-<script>
-import beepAudio from '../../../assets/webrtc/audio/beep.mp3';
+<script setup>
+import { ref, computed, watch, defineProps, nextTick, onUnmounted } from 'vue'
+import beepAudio from '../../../assets/webrtc/audio/beep.mp3'
 
-export default {
-  name: "ChatModule",
-  props: ['webrtc', 'runAction'],
-  created() {
-    this.setActionEventListener();
-    this.audio = new Audio(beepAudio);
+
+const props = defineProps({
+  webrtc: {
+    type: Object,
+    required: true
   },
-  computed: {
-    users() {
-      let users = [{
-        name: 'Everyone',
-        peerJsId: null
-      }];
+  runAction: {
+    type: Function,
+    required: true
+  }
+})
 
-      this.webrtc.People.getConnections().forEach((item) => {
-        users.push({
-          name: item.name,
-          peerJsId: item.peerJsId
-        });
-      });
+const users = computed(() => {
+  let users = [{
+    name: 'Everyone',
+    peerJsId: null
+  }]
 
-      return users;
-    }
-  },
-  watch: {
-    users(value) {
-      let index = value.findIndex(x => x.peerJsId === this.selectedUser);
+  props.webrtc.People.getConnections().forEach((item) => {
+    users.push({
+      name: item.name,
+      peerJsId: item.peerJsId
+    })
+  })
 
-      if(index < 0) {
-        this.selectedUser = null;
-      }
-    }
-  },
-  data() {
-    return {
-      audio: null,
-      text: null,
-      dialog: false,
-      room: null,
-      messages: [],
-      selectedUser: null,
-      action: {
-        name: 'chat',
-        moderator: false,
-        users: [],
-        attributes: {
-          message: '',
-          sender: null,
-          private: false,
-        }
-      }
-    }
-  },
-  methods: {
-    show(status = true) {
-      this.dialog = status;
+  return users
+})
 
-      if(status) {
-        this.$refs.messages.scrollTop = this.$refs.messages.scrollHeight;
-        this.webrtc.userSettings.newMessage = false;
-      }
-    },
-    open(room) {
-      this.room = room;
-      this.show();
-    },
-    sendMessage() {
-      let action = { ...this.action};
-      action.attributes.message = this.text;
-      action.attributes.sender = this.webrtc.peerJsId;
 
-      if(this.selectedUser) {
-        action.attributes.private = true;
-        action.users = [{
-          peerJsId: this.selectedUser
-        }];
-      }
+const messagesBox = ref()
+const audio = ref()
+const text = ref()
+const dialog = ref(false)
+const room = ref()
+const messages = ref([])
+const selectedUser = ref()
+const action = ref({
+  name: 'chat',
+  moderator: false,
+  users: [],
+  attributes: {
+    message: '',
+    sender: null,
+    private: false,
+  }
+})
 
-      this.webrtc.runAction(this.room.id, action);
-      this.insertMessage('You', this.text, action.attributes.private);
-      this.text = null;
-    },
-    setActionEventListener() {
-      window.addEventListener('onChatAction-ReceivedMessage',
-        this.receivedMessageAction);
-    },
-    receivedMessageAction(e) {
-      let user = this.users.find(x => x.peerJsId === e.detail.sender);
 
-      if(!user) {
-        if(e.detail.sender === this.webrtc.peerJsId) {
-          return;
-        }
+watch(users, (value) => {
+  let index = value.findIndex(x => x.peerJsId === selectedUser.value)
 
-        user = {
-          name: 'unknown'
-        };
-      }
+  if(index < 0) {
+    selectedUser.value = null
+  }
+})
 
-      this.insertMessage(user.name, e.detail.message, e.detail.private);
-      this.audio.play();
+const show = (status = true) => {
+  dialog.value = status
 
-      if(!this.dialog) {
-        this.webrtc.userSettings.newMessage = true;
-      }
-    },
-    getCurrentTime() {
-      let date = new Date;
-      let hours = date.getHours();
-      let minutes = date.getMinutes();
-      let ampm = hours >= 12 ? 'pm' : 'am';
-
-      hours = hours % 12;
-      hours = hours ? hours : 12;
-      minutes = minutes < 10 ? '0'+minutes : minutes;
-
-      return hours + ':' + minutes + ' ' + ampm;
-    },
-    insertMessage(name, message, privateType = false) {
-      this.messages.push({
-        from: name,
-        text: message,
-        time: this.getCurrentTime(),
-        private: privateType
-      });
-
-      this.$nextTick(() => {
-        this.$refs.messages.scrollTop = this.$refs.messages.scrollHeight;
-      });
-    }
-  },
-  unmounted() {
-    window.removeEventListener('onChatAction-ReceivedMessage',
-      this.receivedMessageAction);
+  if(status) {
+    messagesBox.value.scrollTop = messagesBox.value.scrollHeight
+    props.webrtc.userSettings.newMessage = false
   }
 }
+
+const open = (room) => {
+  room.value = room
+  show()
+}
+
+const sendMessage = () => {
+  let actionItem = { ...action }
+  actionItem.attributes.message = text.value
+  actionItem.attributes.sender = props.webrtc.peerJsId
+
+  if(selectedUser.value) {
+    actionItem.attributes.private = true
+    actionItem.users = [{
+      peerJsId: selectedUser.value
+    }]
+  }
+
+  props.webrtc.runAction(room.value.id, actionItem)
+  insertMessage('You', text.value, actionItem.attributes.private)
+  text.value = null
+}
+
+const setActionEventListener = () => {
+  window.addEventListener('onChatAction-ReceivedMessage', receivedMessageAction)
+}
+
+const receivedMessageAction = (e) => {
+  let user = users.value.find(x => x.peerJsId === e.detail.sender)
+
+  if(!user) {
+    if(e.detail.sender === props.webrtc.peerJsId) {
+      return
+    }
+
+    user = {
+      name: 'unknown'
+    }
+  }
+
+  insertMessage(user.name, e.detail.message, e.detail.private)
+  audio.play()
+
+  if(!dialog.value) {
+    props.webrtc.userSettings.newMessage = true
+  }
+}
+
+const getCurrentTime = () => {
+  let date = new Date
+  let hours = date.getHours()
+  let minutes = date.getMinutes()
+  let ampm = hours >= 12 ? 'pm' : 'am'
+
+  hours = hours % 12
+  hours = hours ? hours : 12
+  minutes = minutes < 10 ? '0'+minutes : minutes
+
+  return hours + ':' + minutes + ' ' + ampm
+}
+
+const insertMessage = (name, message, privateType = false) => {
+  messages.value.push({
+    from: name,
+    text: message,
+    time: getCurrentTime(),
+    private: privateType
+  })
+
+  nextTick(() => {
+    messagesBox.value.scrollTop = messagesBox.value.scrollHeight
+  })
+}
+
+onUnmounted(() => {
+  window.removeEventListener('onChatAction-ReceivedMessage', receivedMessageAction)
+})
+
+setActionEventListener()
+audio.value = new Audio(beepAudio)
+
+defineExpose({
+  open
+})
 </script>
 
 <style lang="scss">

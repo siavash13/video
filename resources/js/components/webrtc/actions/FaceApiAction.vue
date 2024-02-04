@@ -1,6 +1,6 @@
 <template>
   <div id="faceapi-text-action" :style="{ 'display': ((dialog)? 'block' : 'none')}">
-    <div class="admin-section" v-if="userSettings.isCreator">
+    <div class="admin-section" v-if="props.userSettings.isCreator">
       <div class="text-section">
         <div class="settings mx-15">
           <div>
@@ -40,178 +40,203 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import {defineExpose, defineProps, ref, computed, onMounted, onUnmounted} from 'vue'
 import FakeFace from "../../../assets/webrtc/images/face-profile.jpg";
 
-export default {
-  name: "FaceApiAction",
-  props: ['room', 'webrtc', 'userSettings'],
-  created() {
-    this.setImages();
-
-  //  this.webrtc.Media.setEvent('set-user-info', this.handleUserInfoStore, 'play');
+const props = defineProps({
+  webrtc: {
+    type: Object,
+    required: true
   },
-  mounted() {
-    this.initialCallbacks();
-    this.setActionEventListener();
+  room: {
+    type: Object,
+    required: true
   },
-  computed: {
-    users() {
-      let users = [{
-        name: 'Creator',
-        peerJsId: this.userSettings.peerJsId
-      }];
+  userSettings: {
+    type: Object,
+    required: true
+  }
+})
 
-      this.webrtc.People.getConnections().forEach((item) => {
-        users.push({
-          name: item.name,
-          peerJsId: item.peerJsId
-        });
-      });
+const users = computed(() => {
+  let users = [{
+    name: 'Creator',
+    peerJsId: props.userSettings.peerJsId
+  }]
 
-      return users;
-    }
+  props.webrtc.People.getConnections().forEach((item) => {
+    users.push({
+      name: item.name,
+      peerJsId: item.peerJsId
+    })
+  })
+
+  return users;
+})
+
+const dialog = ref(false)
+const type= ref('hat')
+const timeout= ref(30)
+const selectedUser= ref()
+const event= ref()
+const faceApi= ref({
+  drawItems: ['hat', 'medal'],
+  endTime: {
+    hat: null,
+    medal: null,
   },
-  data() {
-    return {
-      dialog: false,
-      type: 'hat',
-      timeout: 30,
-      selectedUser: null,
-      event: null,
-      action: {
-        name: 'face-api',
-        moderator: true,
-        users: [],
-        attributes: {
-          type: 'hat',
-          timeout: '5',
-          peerJsId: null,
-        }
-      },
-      faceApi: {
-        drawItems: ['hat', 'medal'],
-        endTime: {
-          hat: null,
-          medal: null,
-        },
-        callbacks: {
-          hat: null,
-          medal: null,
-        }
-      },
-      images: {
-        medal: null,
-        hat: null,
-        faceTest: null,
-      },
-    }
-  },
-  methods: {
-    show(status = true) {
-      this.dialog = status;
+  callbacks: {
+    hat: null,
+    medal: null,
+  }
+})
+const images= ref({
+  medal: null,
+  hat: null,
+  faceTest: null,
+})
 
-      if(!status) {
-      }
-    },
-    run() {
-      this.show();
-    },
-    initialCallbacks() {
-      this.faceApi.callbacks.hat = this.webrtc.Media.registerFaceDetectorCallback('hat', this.draw);
-      this.faceApi.callbacks.medal = this.webrtc.Media.registerFaceDetectorCallback('medal', this.draw);
-    },
-    startDraw() {
-      let action = Object.assign({}, this.action);
+const action = ref({
+  name: 'face-api',
+  moderator: true,
+  users: [],
+  attributes: {
+    type: 'hat',
+    timeout: '5',
+    peerJsId: null,
+  }
+})
 
-      action.attributes.type = this.type;
-      action.attributes.timeout = this.timeout;
-      action.users.push({
-        peerJsId: this.selectedUser
-      });
 
-      this.webrtc.runAction(this.room.id, action);
-      this.show(false);
-    },
-    setActionEventListener() {
-      window.addEventListener('onFaceApiAction-DetectAndDraw', this.userFaceApiListenerAction);
-    },
-    clearlistener() {
-      window.removeEventListener('onFaceApiAction-DetectAndDraw',this.userFaceApiListenerAction);
-    },
-    setImages() {
-      this.images.faceTest = new Image;
-      this.images.faceTest.src = FakeFace;
-      this.images.faceTest.onload = () => {
+const show = (status = true) => {
+  dialog.value = status;
 
-      }
-
-      this.images.hat = new Image;
-      this.images.hat.src = "/images/pirate-hat.webp";
-      this.images.medal = new Image;
-      this.images.medal.src = "/images/medal.png";
-    },
-    userFaceApiListenerAction(e) {
-      this.faceApi.endTime[e.detail.type] = new Date();
-      this.faceApi.endTime[e.detail.type].setTime(
-        this.faceApi.endTime[e.detail.type].getTime() + parseInt(e.detail.timeout) * 1000
-      );
-
-      this.faceApi.callbacks[e.detail.type].enable = true;
-    },
-    async checkCallbackTimeOut(type) {
-      let currentTime = Date.now();
-
-      if (!this.faceApi.callbacks[type].enable) {
-        return false;
-      }
-
-      if (currentTime > this.faceApi.endTime[type]) {
-        this.faceApi.endTime[type] = null;
-        this.faceApi.callbacks[type].enable = false;
-        return false;
-      }
-
-      return true;
-    },
-    draw(lastPosition, canvas, type) {
-      if (!this.checkCallbackTimeOut(type)) return;
-
-      const ctx = canvas.getContext("2d");
-      const methodName = 'calculate' + type.charAt(0).toUpperCase() + type.slice(1) + 'Position';
-      const typePosition = this[methodName](lastPosition);
-
-      ctx.drawImage(this.images[type],
-        typePosition.posX,
-        typePosition.posY,
-        typePosition.width,
-        typePosition.height);
-    },
-    calculateHatPosition(data) {
-      let width = data.width * 2.6;
-
-      return {
-        width: width,
-        height: this.images.hat.naturalHeight / (this.images.hat.naturalWidth / width),
-        posX: data.xMin - ((width - data.width) / 2),
-        posY: data.yMin - ((width - data.width) / 1.22),
-      };
-    },
-    calculateMedalPosition(data) {
-      let width = data.width / 1.8;
-
-      return {
-        width: width,
-        height: this.images.medal.naturalHeight / (this.images.medal.naturalWidth / width),
-        posX: data.xMin + (data.xMin / 1.32),
-        posY: data.yMin + data.height + (data.height / 10)
-      };
-    },
-  },
-  unmounted() {
-    this.clearlistener();
+  if(!status) {
   }
 }
+
+const run = () => {
+  show()
+}
+
+const initialCallbacks = () => {
+  faceApi.value.callbacks.hat = props.webrtc.Media.registerFaceDetectorCallback('hat', draw);
+  faceApi.value.callbacks.medal = props.webrtc.Media.registerFaceDetectorCallback('medal', draw);
+}
+
+const startDraw = () => {
+  let actionItem = JSON.parse(JSON.stringify(action.value))
+
+  actionItem.attributes.type = type.value
+  actionItem.attributes.timeout = timeout.value
+  actionItem.users.push({
+    peerJsId: selectedUser.value
+  })
+
+  props.webrtc.runAction(props.room.id, actionItem)
+  show(false)
+}
+
+const setActionEventListener = () => {
+  window.addEventListener('onFaceApiAction-DetectAndDraw', userFaceApiListenerAction);
+}
+
+const clearListener = () => {
+  window.removeEventListener('onFaceApiAction-DetectAndDraw', userFaceApiListenerAction);
+}
+
+const setImages = () => {
+  images.value.faceTest = new Image
+  images.value.faceTest.src = FakeFace
+  images.value.faceTest.onload = () => {
+
+  }
+
+  images.value.hat = new Image
+  images.value.hat.src = '/images/pirate-hat.webp'
+  images.value.medal = new Image
+  images.value.medal.src = '/images/medal.png'
+}
+
+const userFaceApiListenerAction = (e) => {
+  faceApi.value.endTime[e.detail.type] = new Date()
+  faceApi.value.endTime[e.detail.type].setTime(
+      faceApi.value.endTime[e.detail.type].getTime() + parseInt(e.detail.timeout) * 1000
+  )
+
+  faceApi.value.callbacks[e.detail.type].enable = true
+}
+
+const checkCallbackTimeOut = async (type) => {
+  let currentTime = Date.now()
+
+  if (!faceApi.value.callbacks[type].enable) {
+    return false
+  }
+
+  if (currentTime > faceApi.value.endTime[type]) {
+    faceApi.value.endTime[type] = null
+    faceApi.value.callbacks[type].enable = false
+    return false
+  }
+
+  return true
+}
+
+const draw = (lastPosition, canvas, type) => {
+  if (!checkCallbackTimeOut(type)) return
+
+  const ctx = canvas.getContext("2d")
+  const methodName = 'calculate' + type.charAt(0).toUpperCase() + type.slice(1) + 'Position'
+  const typePosition = calculatePositions[methodName](lastPosition)
+
+  ctx.drawImage(images.value[type],
+      typePosition.posX,
+      typePosition.posY,
+      typePosition.width,
+      typePosition.height)
+}
+
+
+const calculatePositions = {
+  calculateHatPosition: (data) => {
+    let width = data.width * 2.6;
+
+    return {
+      width: width,
+      height: images.value.hat.naturalHeight / (images.value.hat.naturalWidth / width),
+      posX: data.xMin - ((width - data.width) / 2),
+      posY: data.yMin - ((width - data.width) / 1.22),
+    };
+  },
+  calculateMedalPosition: (data) => {
+    let width = data.width / 1.8;
+
+    return {
+      width: width,
+      height: images.value.medal.naturalHeight / (images.value.medal.naturalWidth / width),
+      posX: data.xMin + (data.xMin / 1.32),
+      posY: data.yMin + data.height + (data.height / 10)
+    };
+  }
+}
+
+onMounted(() => {
+  initialCallbacks()
+  setActionEventListener()
+})
+
+onUnmounted(() => {
+  clearListener()
+})
+
+setImages()
+
+defineExpose({
+  run
+})
+
 </script>
 
 <style lang="scss">

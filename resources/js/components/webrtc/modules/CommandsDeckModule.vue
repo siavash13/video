@@ -3,7 +3,7 @@
     <div class="deck-btn">
       <a
         class="btn btn-danger btn-action"
-        @click.prevent="commands.left()"
+        @click.prevent="props.commands.left()"
       >
         <span class="tooltip top">
           Left the room
@@ -16,9 +16,9 @@
       </a>
 
       <a
-        v-if="userSettings.isCreator"
+        v-if="props.userSettings.isCreator"
         class="btn btn-danger btn-action"
-        @click.prevent="commands.run('terminate')"
+        @click.prevent="props.commands.run('terminate')"
       >
         <span class="tooltip top">
           Terminate meeting
@@ -32,14 +32,14 @@
 
       <a
         class="btn btn-default btn-action"
-        :class="{ disabled: userSettings.camDisable }"
-        @click="commands.mute('camera')"
+        :class="{ disabled: props.userSettings.camDisable }"
+        @click="props.commands.mute('camera')"
       >
         <span class="tooltip top">
-          {{ (userSettings.camDisable) ? 'Turn on camera' : 'Turn off camera' }}
+          {{ (props.userSettings.camDisable) ? 'Turn on camera' : 'Turn off camera' }}
         </span>
         <svg
-          v-if="!userSettings.camDisable"
+          v-if="!props.userSettings.camDisable"
           xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-camera-video-fill" viewBox="0 0 16 16">
           <path fill-rule="evenodd" d="M0 5a2 2 0 0 1 2-2h7.5a2 2 0 0 1 1.983 1.738l3.11-1.382A1 1 0 0 1 16 4.269v7.462a1 1 0 0 1-1.406.913l-3.111-1.382A2 2 0 0 1 9.5 13H2a2 2 0 0 1-2-2V5z"/>
         </svg>
@@ -50,14 +50,14 @@
 
       <a
         class="btn btn-small btn-default btn-action"
-        :class="{ disabled: userSettings.micDisable }"
-        @click="commands.mute('microphone')"
+        :class="{ disabled: props.userSettings.micDisable }"
+        @click="props.commands.mute('microphone')"
       >
         <span class="tooltip top">
-          {{ (userSettings.micDisable) ? 'Turn on microphone' : 'Turn off microphone' }}
+          {{ (props.userSettings.micDisable) ? 'Turn on microphone' : 'Turn off microphone' }}
         </span>
         <svg
-          v-if="!userSettings.micDisable"
+          v-if="!props.userSettings.micDisable"
           xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-mic-fill" viewBox="0 0 16 16">
           <path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/>
           <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/>
@@ -70,8 +70,8 @@
 
       <a
         class="btn btn-default btn-action"
-        :class="{ notify: userSettings.newMessage }"
-        @click.prevent="commands.open('chat')"
+        :class="{ notify: props.userSettings.newMessage }"
+        @click.prevent="props.commands.open('chat')"
       >
         <span class="tooltip top">
           Chat
@@ -85,8 +85,8 @@
 
       <a
         class="btn btn-default btn-action"
-        :class="{ notify: userSettings.newAdmitRequest }"
-        @click.prevent="commands.open('people')"
+        :class="{ notify: props.userSettings.newAdmitRequest }"
+        @click.prevent="props.commands.open('people')"
       >
         <span class="tooltip top">
           People
@@ -99,9 +99,9 @@
       </a>
 
       <a
-        v-if="userSettings.isCreator"
+        v-if="props.userSettings.isCreator"
         class="btn btn-default btn-action"
-        @click.prevent="commands.run('canvasText')"
+        @click.prevent="props.commands.run('canvasText')"
       >
         <span class="tooltip top">
           Canvas Text
@@ -114,9 +114,9 @@
       </a>
 
       <a
-        v-if="userSettings.isCreator"
+        v-if="props.userSettings.isCreator"
         class="btn btn-default btn-action"
-        @click.prevent="commands.run('faceApi')"
+        @click.prevent="props.commands.run('faceApi')"
       >
         <span class="tooltip top">
           Face Detection
@@ -132,11 +132,19 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: "CommandsDeckModule",
-  props: ['userSettings', 'commands'],
-}
+<script setup>
+import { defineProps } from 'vue'
+
+const props = defineProps({
+  userSettings: {
+    type: Object,
+    required: true
+  },
+  commands: {
+    type: Object,
+    required: true
+  }
+})
 </script>
 
 <style scoped lang="scss">

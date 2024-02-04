@@ -1,14 +1,17 @@
 import PeerJS from 'peerjs';
-import socketConfig from "../../configs/webRTCsocket";
+import configs from "../../configs/webrtc";
 
 
 class VideoPeer
 {
   constructor(Events) {
     return new Promise((resolve, reject) => {
+      console.log()
       this.videoPeer = new PeerJS(undefined, {
-        host: socketConfig.peer_host,
-        port: socketConfig.peer_port,
+        host: configs.peer_host,
+        port: configs.peer_port,
+        secure: /^true$/i.test(configs.peer_secure),
+        referrerPolicy: '',
       }).on('open', (id) => {
         this.peerJsId = id;
         resolve(this);

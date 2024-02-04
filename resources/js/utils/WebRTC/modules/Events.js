@@ -1,5 +1,6 @@
-module.exports = () => {
+const configs = require("../../../configs/webrtc");
 
+module.exports = () => {
   const Events = {
     parent: null,
     socket: null,
@@ -85,13 +86,17 @@ module.exports = () => {
     });
 
     this.socket.on('successfully-run-action', (action) => {
-      console.log('Action run successfully!');
-      console.log(action);
+      if (configs.debug) {
+        console.log('Action run successfully!');
+        console.log(action);
+      }
     });
 
     this.socket.on('failed-run-action', (action) => {
-      console.log('Action failed to run!');
-      console.log(action);
+      if (configs.debug) {
+        console.log('Action failed to run!');
+        console.log(action);
+      }
     });
 
     this.socket.on('you-are-ban', (data) => {
@@ -99,7 +104,9 @@ module.exports = () => {
     });
 
     this.socket.on('info-room-data', (data) => {
-      console.log(data);
+      if (configs.debug) {
+        console.log(data);
+      }
     });
   }
 
@@ -118,7 +125,9 @@ module.exports = () => {
     if (index > -1) {
       return this.events[index]['method'](data);
     } else {
-      console.log(type + ' type ' + event + ' event not defined.');
+      if (configs.debug) {
+        console.log(type + ' type ' + event + ' event not defined.');
+      }
     }
   }
 

@@ -18,20 +18,12 @@ class ProcessCommand extends Command
         );
 
         $this->publishConfigFile();
-        $this->createDatabaseTable();
         $this->publishMiddlewareFile();
-        $this->publishVueAssets($version);
-        $this->writeCommentOnScreen($version);
+        $this->publishVueAssets();
+        $this->writeCommentOnScreen();
     }
 
-    protected function createDatabaseTable()
-    {
-        $this->info('Create Database Tables...');
-        include_once __DIR__ . '/../../database/migrations/2022_02_19_214914_create_room_table.php';
-        (new \CreateRoomTable)->up();
-    }
-
-    protected function publishVueAssets($version)
+    protected function publishVueAssets()
     {
         $this->info('Publishing Video Conference Vue Assets...');
         $this->callSilent('vendor:publish', [
@@ -40,18 +32,6 @@ class ProcessCommand extends Command
         ]);
         $this->callSilent('vendor:publish', ['--tag' => 'videoconference-vue']);
         $this->callSilent('vendor:publish', ['--tag' => 'mediapipe-models']);
-
-        if ($version == 'Vue2') {
-            $this->callSilent('vendor:publish', [
-                '--tag' => 'videoconference-vue2',
-                '--force' => true,
-            ]);
-        } else {
-            $this->callSilent('vendor:publish', [
-                '--tag' => 'videoconference-vue3',
-                '--force' => true,
-            ]);
-        }
     }
 
     protected function publishConfigFile()
@@ -76,11 +56,9 @@ class ProcessCommand extends Command
         }
     }
 
-    protected function writeCommentOnScreen($version)
+    protected function writeCommentOnScreen()
     {
-        $vueVersion = ($version == 'Vue2') ? 'vue2' : 'vue';
-
-        $this->warn('Please install dependencies packages by running \'npm install '.$vueVersion
+        $this->warn('Please install dependencies packages by running \'npm install vue'
             .' vue-loader axios peerjs socket.io-client@^4.1.2 @mediapipe/face_detection @mediapipe/selfie_segmentation'
             .' @tensorflow-models/body-segmentation @tensorflow-models/face-detection @tensorflow/tfjs-backend-webgl'
             .' @tensorflow/tfjs-converter @tensorflow/tfjs-core\' ');

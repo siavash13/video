@@ -116,7 +116,7 @@ module.exports = () => {
 
       let videoParams = (muteVideo)? false : {
         deviceId: {
-          exact: devices.camera
+          exact: devices.camera,
         }
       };
 
@@ -240,18 +240,20 @@ module.exports = () => {
   Media.release = () => {
     let videoRef = document.getElementById(this.options.localVideoRef);
 
-    if (videoRef) {
-      let srcObject = videoRef.srcObject;
-
-      const stream = srcObject;
+    const stopTracks = (item) => {
+      const stream = item.srcObject;
       const tracks = stream.getTracks();
 
       tracks.forEach((track) => {
         track.stop();
       });
-
-      srcObject = null;
     }
+
+    if (videoRef) {
+      stopTracks(videoRef);
+    }
+
+    stopTracks(this.video);
 
     clearInterval(this.interval);
 
@@ -312,22 +314,30 @@ module.exports = () => {
    * Mute user camera to other users
    */
   Media.muteCamera = () => {
+    Media.terminateConnectionsVideoAudioMedia('video');
+    /*
     if (this.parent.userSettings.camDisable) {
       Media.terminateConnectionsVideoAudioMedia('video');
     } else {
       Media.restartMedia();
     }
+
+     */
   }
 
   /**
    * Mute user microphone to other users
    */
   Media.muteMicrophone = () => {
+    Media.terminateConnectionsVideoAudioMedia('audio');
+    /*
     if (this.parent.userSettings.micDisable) {
       Media.terminateConnectionsVideoAudioMedia('audio');
     } else {
       Media.restartMedia();
     }
+
+     */
   }
 
   /**
@@ -379,6 +389,7 @@ module.exports = () => {
         }
       }
 
+
       connection.dataConnection.send({
         event: 'muteMedia',
         camMute: this.parent.userSettings.camDisable,
@@ -393,12 +404,23 @@ module.exports = () => {
   Media.terminateConnectionsVideoAudioMedia = (type = 'video') => {
     let connections = this.parent.People.getConnections();
 
+    // re-grab user media by new settings
+    Media.release()
+    Media.grab(
+      Media.devices,
+      this.parent.userSettings.camDisable,
+      this.parent.userSettings.micDisable
+    ).then(media => {
+      Media.streamVideo(null, media);
+    })
+
+/*
     Media.userMedia.getTracks().forEach(track => {
       if (track.kind === type) {
         track.stop();
       }
     });
-
+*/
     connections.forEach(connection => {
       connection.dataConnection.send({
         event: 'muteMedia',

@@ -48,64 +48,64 @@
   </div>
 </template>
 
-<script>
-import socketConfig from "../../configs/webRTCsocket";
+<script setup>
+import { ref, defineProps } from 'vue'
+import axios from '../../utils/Webrtc/Axios'
+import { useRoute, useRouter } from 'vue-router'
 
-export default {
-  name: "RoomsList",
-  props: ['token'],
-  computed: {
-    baseUrl() {
-      return socketConfig.webrtc_url + '/api/rooms';
-    }
-  },
-  created() {
-    this.room.id = this.$route.params.room_id;
-  },
-  data() {
-    return {
-      room: {
-        id: null,
-      },
-      rooms: [],
-      message: {
-        status: false,
-        text: '',
-        color: 'green'
-      },
-      showRooms: false,
-      loading: false,
-    }
-  },
-  methods: {
-    joinRoom(roomId) {
-      this.$router.push({
-        name: 'webrtcJoinRoom',
-        params: { roomId: roomId }
-      });
-    },
-    getRoomsList() {
-      if (this.loading) {
-        return;
-      }
+const route = useRoute()
+const router = useRouter()
+const apiClient = axios.getInstance()
 
-      let headers = {
-        'user-token': this.token
-      };
+const props = defineProps({
+  token: {
+    type: String,
+    required: true
+  }
+})
 
-      this.loading = true;
+const loading = ref(false)
+const showRooms = ref(false)
+const rooms = ref([])
+const room = ref({
+  id: null
+})
+const message = ref({
+  status: false,
+    text: '',
+    color: 'green'
+})
 
-      axios.get(this.baseUrl + '/user', {
-        headers: headers
-      }).then(response => {
-        this.rooms = response.data.rooms;
-      }).finally(() => {
-        this.loading = false;
-        this.showRooms = true;
-      });
-    },
-  },
+room.value.id = route.params.room_id
+
+const joinRoom = (roomId) => {
+  router.push({
+    name: 'webrtcJoinRoom',
+    params: { roomId: roomId }
+  })
 }
+
+const getRoomsList = () => {
+  if (loading.value) {
+    return
+  }
+
+  let headers = {
+    'user-token': props.token
+  }
+
+  loading.value = true
+
+  apiClient.get('/api/rooms/user', {
+    headers: headers
+  }).then(response => {
+    rooms.value = response.data.rooms
+  }).finally(() => {
+    loading.value = false
+    showRooms.value = true
+  })
+}
+
 </script>
 
 <style lang="scss">

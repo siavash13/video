@@ -1,6 +1,6 @@
 import Socket from "./Socket";
 import PeerJs from "./PeerJs";
-import socketConfig from '../../configs/webRTCsocket';
+import configs from "../../configs";
 
 class Webrtc
 {
@@ -14,7 +14,7 @@ class Webrtc
     this.peerJsId = null;
     this.options = {};
     this.callback = {};
-    this.configs = socketConfig;
+    this.configs = configs.webrtc;
 
     this.Room = require('./modules/Room')();
     this.Media = require('./modules/Media')();
@@ -177,7 +177,7 @@ class Webrtc
  * initial webrtc
  */
 let options = {};
-options.port = socketConfig.webrtc_url;
+options.port = configs.webrtc.webrtc_url;
 
 const webrtc = new Webrtc();
 webrtc.initial(options);

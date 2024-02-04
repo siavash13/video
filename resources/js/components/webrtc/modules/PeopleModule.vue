@@ -40,13 +40,13 @@
             </div>
           </div>
           <div
-            v-if="waitingList.length > 0"
+            v-if="props.waitingList.length > 0"
             v-show="showWaitList"
             class="waitingList"
           >
             <hr/>
             <div
-              v-for="(waiting, index) in waitingList"
+              v-for="(waiting, index) in props.waitingList"
               :key="index"
               class="waitingList-item"
             >
@@ -76,140 +76,162 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch, defineProps, nextTick, onUnmounted } from 'vue'
 import admitAudio from '../../../assets/webrtc/audio/admit.mp3';
 
-export default {
-  name: "PeopleModule",
-  props: ['webrtc', 'runAction', 'waitingList'],
-  created() {
-    this.setClickEventListener();
-    this.audio = new Audio(admitAudio);
-    window.addEventListener('onRequestToAdmit', this.eventHandlerRequestToAdmit);
-    window.addEventListener('onCancelForAdmit', this.eventHandlerCancelForAdmit);
+const props = defineProps({
+  webrtc: {
+    type: Object,
+    required: true
   },
-  computed: {
-    users() {
-      this.usersMenu = [{
-        name: this.webrtc.options.name + ' (You)',
-        peerJsId: this.webrtc.peerJsId,
-        openMenu: false,
-      }];
-
-      this.webrtc.People.getConnections().forEach((item) => {
-        this.usersMenu.push({
-          name: item.name,
-          peerJsId: item.peerJsId,
-          micMute: item.micMute,
-          openMenu: false,
-        });
-      });
-    },
-    isCreator() {
-      return this.webrtc.userSettings.isCreator;
-    }
+  runAction: {
+    type: Function,
+    required: true
   },
-  watch: {
-    users(value) {
-      let index = value.findIndex(x => x.peerJsId === this.selectedUser);
+  waitingList: {
+    type: Array,
+    required: true
+  }
+})
 
-      if (index < 0) {
-        this.selectedUser = null;
+const usersMenu = ref([])
+
+const users = computed(() => {
+  usersMenu.value = [{
+    name: props.webrtc.options.name + ' (You)',
+    peerJsId: props.webrtc.peerJsId,
+    openMenu: false,
+  }]
+
+  props.webrtc.People.getConnections().forEach((item) => {
+    usersMenu.value.push({
+      name: item.name,
+      peerJsId: item.peerJsId,
+      micMute: item.micMute,
+      openMenu: false,
+    })
+  })
+})
+
+const isCreator = computed(() => {
+  return props.webrtc.userSettings.isCreator
+})
+
+watch(users, (value) => {
+  let index = value.findIndex(x => x.peerJsId === selectedUser.value)
+
+  if (index < 0) {
+    selectedUser.value = null
+  }
+})
+
+
+const dropdown = ref()
+const audio = ref()
+const dialog = ref(false)
+const room = ref()
+const showWaitList = ref(true)
+
+const show = (status = true) => {
+  dialog.value = status
+  props.webrtc.userSettings.newAdmitRequest = false
+}
+
+const open = (room) => {
+  room.value = room
+  show()
+}
+
+const hideMenu = (event) => {
+  if (!event.target.matches('.dropdown-content') &&
+      dropdown.value &&
+      dropdown.value.length > 0
+  ) {
+    dropdown.value.forEach(dropdownItem => {
+      dropdownItem.classList.remove('show')
+    })
+  }
+
+  if (event.target.matches('.dropdown-dots')) {
+    event.target.parentElement.childNodes.forEach(node => {
+      if (node.classList.contains('dropdown-content') && !node.classList.contains('show')) {
+        node.classList.add('show');
       }
-    },
-  },
-  data() {
-    return {
-      audio: null,
-      dialog: false,
-      room: null,
-      usersMenu: [],
-      showWaitList: true,
-    }
-  },
-  methods: {
-    show(status = true) {
-      this.dialog = status;
-      this.webrtc.userSettings.newAdmitRequest = false;
-    },
-    open(room) {
-      this.room = room;
-      this.show();
-    },
-    hideMenu(event) {
-      if (!event.target.matches('.dropdown-content') &&
-        this.$refs.dropdown &&
-        this.$refs.dropdown.length > 0
-      ) {
-        this.$refs.dropdown.forEach(dropdown => {
-          dropdown.classList.remove('show');
-        });
-      }
-
-      if (event.target.matches('.dropdown-dots')) {
-        event.target.parentElement.childNodes.forEach(node => {
-          if (node.classList.contains('dropdown-content') && !node.classList.contains('show')) {
-            node.classList.add('show');
-          }
-        })
-      }
-    },
-    setClickEventListener() {
-      window.addEventListener('click', this.hideMenu);
-    },
-    banUser(user) {
-      this.runAction('ban', {
-        peerJsId: user.peerJsId
-      });
-
-      user.openMenu = false;
-    },
-    banUser5Second(user) {
-      this.runAction('multi', {
-        peerJsId: user.peerJsId
-      });
-
-      user.openMenu = false;
-    },
-    muteMic(user) {
-      this.runAction('muteUserMic', {
-        peerJsId: user.peerJsId
-      });
-
-      user.openMenu = false;
-    },
-    responseWaiting(status = false, user, index) {
-      this.runAction('admit', {
-        status: status,
-        roomId: this.room.id,
-        peerJsId: user.peerJsId,
-      });
-
-      this.showWaitList = false;
-      this.webrtc.People.removeFromWaitingList(index);
-
-      this.$nextTick(() => {
-        this.showWaitList = true;
-      });
-    },
-    eventHandlerRequestToAdmit() {
-      this.audio.play();
-      if(!this.dialog) {
-        this.webrtc.userSettings.newAdmitRequest = true;
-      }
-    },
-    eventHandlerCancelForAdmit() {
-      if(this.waitingList.length === 0) {
-        this.webrtc.userSettings.newAdmitRequest = false;
-      }
-    }
-  },
-  unmounted() {
-    window.removeEventListener('click', this.hideMenu);
-    window.removeEventListener('onRequestToAdmit', this.eventHandlerRequestToAdmit);
-    window.removeEventListener('onCancelForAdmit', this.eventHandlerCancelForAdmit);
+    })
   }
 }
+
+const setEventsListener = () => {
+  window.addEventListener('click', hideMenu)
+  window.addEventListener('onRequestToAdmit', eventHandlerRequestToAdmit)
+  window.addEventListener('onCancelForAdmit', eventHandlerCancelForAdmit)
+}
+
+const banUser = (user) => {
+  props.runAction('ban', {
+    peerJsId: user.peerJsId
+  })
+
+  user.openMenu = false
+}
+
+const banUser5Second = (user) => {
+  props.runAction('multi', {
+    peerJsId: user.peerJsId
+  })
+
+  user.openMenu = false;
+}
+
+const muteMic = (user) => {
+  props.runAction('muteUserMic', {
+    peerJsId: user.peerJsId
+  })
+
+  user.openMenu = false
+}
+
+const responseWaiting = (status = false, user, index) => {
+  props.runAction('admit', {
+    status: status,
+    roomId: room.value.id,
+    peerJsId: user.peerJsId,
+  })
+
+  showWaitList.value = false;
+  props.webrtc.People.removeFromWaitingList(index)
+
+  nextTick(() => {
+    showWaitList.value = true;
+  })
+}
+
+const eventHandlerRequestToAdmit = () => {
+  audio.value.play()
+  if(!dialog.value) {
+    props.webrtc.userSettings.newAdmitRequest = true
+  }
+}
+
+const eventHandlerCancelForAdmit = () => {
+  if(props.waitingList.length === 0) {
+    props.webrtc.userSettings.newAdmitRequest = false
+  }
+}
+
+onUnmounted(() => {
+  window.removeEventListener('click', hideMenu)
+  window.removeEventListener('onRequestToAdmit', eventHandlerRequestToAdmit)
+  window.removeEventListener('onCancelForAdmit', eventHandlerCancelForAdmit);
+})
+
+setEventsListener()
+audio.value = new Audio(admitAudio)
+
+defineExpose({
+  open
+})
 </script>
 
 <style lang="scss">

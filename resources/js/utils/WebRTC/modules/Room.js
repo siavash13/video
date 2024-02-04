@@ -11,8 +11,6 @@ module.exports = () => {
     this.parent = parent;
     this.options = options;
     this.actions = [];
-
-
   }
 
   /**

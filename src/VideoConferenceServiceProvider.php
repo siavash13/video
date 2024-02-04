@@ -25,8 +25,6 @@ class VideoConferenceServiceProvider extends ServiceProvider
         $this->registerRoutes();
         $this->registerResources();
         $this->registerVueAssetsPublish();
-        $this->registerVue2AssetsPublish();
-        $this->registerVue3AssetsPublish();
         $this->registerConfigFilePublish();
         $this->registerMiddlewareFilePublish();
 
@@ -45,6 +43,7 @@ class VideoConferenceServiceProvider extends ServiceProvider
     public function registerVueAssetsPublish()
     {
         $this->publishes([
+            __DIR__.'/../resources/js/app-video-conference.js' => resource_path('js/app-video-conference.js'),
             __DIR__.'/../resources/js/App-video-conference.vue' => resource_path('js/App-video-conference.vue'),
             __DIR__.'/../resources/js/assets/webrtc/audio/admit.mp3' => resource_path('js/assets/webrtc/audio/admit.mp3'),
             __DIR__.'/../resources/js/assets/webrtc/audio/beep.mp3' => resource_path('js/assets/webrtc/audio/beep.mp3'),
@@ -61,6 +60,8 @@ class VideoConferenceServiceProvider extends ServiceProvider
             __DIR__.'/../resources/js/components/webrtc/Rooms.vue' => resource_path('js/components/webrtc/Rooms.vue'),
             __DIR__.'/../resources/js/components/webrtc/RoomCreate.vue' => resource_path('js/components/webrtc/RoomCreate.vue'),
             __DIR__.'/../resources/js/components/webrtc/RoomsList.vue' => resource_path('js/components/webrtc/RoomsList.vue'),
+            __DIR__.'/../resources/js/components/webrtc/RoomJoin.vue' => resource_path('js/components/webrtc/RoomJoin.vue'),
+            __DIR__.'/../resources/js/components/webrtc/VideoConference.vue' => resource_path('js/components/webrtc/VideoConference.vue'),
             __DIR__.'/../resources/js/components/webrtc/actions/AdmitAction.vue' => resource_path('js/components/webrtc/actions/AdmitAction.vue'),
             __DIR__.'/../resources/js/components/webrtc/actions/BanAction.vue' => resource_path('js/components/webrtc/actions/BanAction.vue'),
             __DIR__.'/../resources/js/components/webrtc/actions/CanvasTextAction.vue' => resource_path('js/components/webrtc/actions/CanvasTextAction.vue'),
@@ -73,25 +74,26 @@ class VideoConferenceServiceProvider extends ServiceProvider
             __DIR__.'/../resources/js/components/webrtc/modules/ChatModule.vue' => resource_path('js/components/webrtc/modules/ChatModule.vue'),
             __DIR__.'/../resources/js/components/webrtc/modules/PeopleModule.vue' => resource_path('js/components/webrtc/modules/PeopleModule.vue'),
             __DIR__.'/../resources/js/components/webrtc/modules/CommandsDeckModule.vue' => resource_path('js/components/webrtc/modules/CommandsDeckModule.vue'),
+            __DIR__.'/../resources/js/router/router-video-conference.js' => resource_path('js/router/router-video-conference.js'),
             __DIR__.'/../resources/js/router/webrtc.js' => resource_path('js/router/webrtc.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/actions/admitAction.js' => resource_path('js/utils/WebRTC/actions/admitAction.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/actions/banAction.js' => resource_path('js/utils/WebRTC/actions/banAction.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/actions/chatAction.js' => resource_path('js/utils/WebRTC/actions/chatAction.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/actions/canvasTextAction.js' => resource_path('js/utils/WebRTC/actions/canvasTextAction.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/actions/faceApiAction.js' => resource_path('js/utils/WebRTC/actions/faceApiAction.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/actions/muteUserMicAction.js' => resource_path('js/utils/WebRTC/actions/muteUserMicAction.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/actions/terminateAction.js' => resource_path('js/utils/WebRTC/actions/terminateAction.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/modules/Events.js' => resource_path('js/utils/WebRTC/modules/Events.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/modules/Media.js' => resource_path('js/utils/WebRTC/modules/Media.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/modules/People.js' => resource_path('js/utils/WebRTC/modules/People.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/modules/Room.js' => resource_path('js/utils/WebRTC/modules/Room.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/modules/MediapipeBodySegment.js' => resource_path('js/utils/WebRTC/modules/MediapipeBodySegment.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/modules/MediapipeFaceDetect.js' => resource_path('js/utils/WebRTC/modules/MediapipeFaceDetect.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/PeerJs.js' => resource_path('js/utils/WebRTC/PeerJs.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/Socket.js' => resource_path('js/utils/WebRTC/Socket.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/WebRTC.js' => resource_path('js/utils/WebRTC/WebRTC.js'),
-            __DIR__.'/../resources/js/utils/WebRTC/webRTCHelper.js' => resource_path('js/utils/WebRTC/webRTCHelper.js'),
-            __DIR__.'/../resources/js/configs/webRTCsocket.js' => resource_path('js/configs/webRTCsocket.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/actions/admitAction.js' => resource_path('js/utils/Webrtc/actions/admitAction.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/actions/banAction.js' => resource_path('js/utils/Webrtc/actions/banAction.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/actions/chatAction.js' => resource_path('js/utils/Webrtc/actions/chatAction.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/actions/canvasTextAction.js' => resource_path('js/utils/Webrtc/actions/canvasTextAction.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/actions/faceApiAction.js' => resource_path('js/utils/Webrtc/actions/faceApiAction.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/actions/muteUserMicAction.js' => resource_path('js/utils/Webrtc/actions/muteUserMicAction.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/actions/terminateAction.js' => resource_path('js/utils/Webrtc/actions/terminateAction.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/modules/Events.js' => resource_path('js/utils/Webrtc/modules/Events.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/modules/Media.js' => resource_path('js/utils/Webrtc/modules/Media.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/modules/People.js' => resource_path('js/utils/Webrtc/modules/People.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/modules/Room.js' => resource_path('js/utils/Webrtc/modules/Room.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/modules/MediapipeBodySegment.js' => resource_path('js/utils/Webrtc/modules/MediapipeBodySegment.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/modules/MediapipeFaceDetect.js' => resource_path('js/utils/Webrtc/modules/MediapipeFaceDetect.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/PeerJs.js' => resource_path('js/utils/Webrtc/PeerJs.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/Socket.js' => resource_path('js/utils/Webrtc/Socket.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/WebRTC.js' => resource_path('js/utils/Webrtc/WebRTC.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/helper.vue' => resource_path('js/utils/Webrtc/helper.vue'),
+            __DIR__.'/../resources/js/configs/webrtc.js' => resource_path('js/configs/webrtc.js'),
         ], 'videoconference-vue-force');
 
         $this->publishes([
@@ -125,27 +127,6 @@ class VideoConferenceServiceProvider extends ServiceProvider
             __DIR__.'/../resources/models/selfie/selfie_segmentation_solution_simd_wasm_bin.js' => public_path('models/selfie/selfie_segmentation_solution_simd_wasm_bin.js'),
             __DIR__.'/../resources/models/selfie/selfie_segmentation_solution_simd_wasm_bin.wasm' => public_path('models/selfie/selfie_segmentation_solution_simd_wasm_bin.wasm'),
         ], 'mediapipe-models');
-    }
-
-    public function registerVue2AssetsPublish()
-    {
-        $this->publishes([
-            __DIR__.'/../resources/js/vue2/app-video-conference.js' => resource_path('js/app-video-conference.js'),
-            __DIR__.'/../resources/js/vue2/router-video-conference.js' => resource_path('js/router/router-video-conference.js'),
-            __DIR__.'/../resources/js/vue2/RoomJoin.vue' => resource_path('js/components/webrtc/RoomJoin.vue'),
-            __DIR__.'/../resources/js/vue2/VideoConference.vue' => resource_path('js/components/webrtc/VideoConference.vue'),
-            __DIR__.'/../resources/js/vue2/webRTCIndex.js' => resource_path('js/utils/WebRTC/index.js'),
-        ], 'videoconference-vue2');
-    }
-
-    public function registerVue3AssetsPublish()
-    {
-        $this->publishes([
-            __DIR__.'/../resources/js/vue3/app-video-conference.js' => resource_path('js/app-video-conference.js'),
-            __DIR__.'/../resources/js/vue3/router-video-conference.js' => resource_path('js/router/router-video-conference.js'),
-            __DIR__.'/../resources/js/vue3/RoomJoin.vue' => resource_path('js/components/webrtc/RoomJoin.vue'),
-            __DIR__.'/../resources/js/vue3/VideoConference.vue' => resource_path('js/components/webrtc/VideoConference.vue'),
-        ], 'videoconference-vue3');
     }
 
     public function registerConfigFilePublish()

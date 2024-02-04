@@ -2,26 +2,28 @@
   <span></span>
 </template>
 
-<script>
-export default {
-  name: "TerminateAction",
-  props: ['webrtc'],
-  data() {
-    return {
-      action: {
-        name: 'terminate',
-        moderator: true,
-        users: [],
-        attributes: {
+<script setup>
+import { defineProps, defineExpose, ref } from 'vue'
 
-        }
-      }
-    }
-  },
-  methods: {
-    run(room, data) {
-      this.webrtc.runAction(room.id, this.action);
-    }
+const props = defineProps({
+  webrtc: {
+    type: Object,
+    required: true
   }
+})
+
+const action = ref({
+  name: 'terminate',
+  moderator: true,
+  users: [],
+  attributes: {}
+})
+
+const run = (room, data) => {
+  props.webrtc.runAction(room.id, action.value)
 }
+
+defineExpose({
+  run
+})
 </script>

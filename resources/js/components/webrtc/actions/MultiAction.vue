@@ -2,29 +2,32 @@
   <span></span>
 </template>
 
-<script>
-export default {
-  name: "MultiAction",
-  props: ['webrtc'],
-  data() {
-    return {
-    }
-  },
-  methods: {
-    run(room, data) {
-      setTimeout(() => {
-        this.webrtc.runAction(room.id, {
-          name: 'ban',
-          moderator: true,
-          users: [],
-          attributes: {
-            ban: {
-              peerJsId: data.peerJsId
-            }
-          }
-        });
-      }, 5000);
-    }
+<script setup>
+import { defineProps, defineExpose, ref } from 'vue'
+
+const props = defineProps({
+  webrtc: {
+    type: Object,
+    required: true
   }
+})
+
+const run = (room, data) => {
+  setTimeout(() => {
+    props.webrtc.runAction(room.id, {
+      name: 'ban',
+      moderator: true,
+      users: [],
+      attributes: {
+        ban: {
+          peerJsId: data.peerJsId
+        }
+      }
+    });
+  }, 5000)
 }
+
+defineExpose({
+  run
+})
 </script>

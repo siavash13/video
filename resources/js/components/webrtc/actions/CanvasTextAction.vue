@@ -1,7 +1,7 @@
 <template>
   <div id="canvas-text" v-show="dialog || isPlay">
     <div id="canvas-text-action" class="action" :style="{ 'display': ((dialog)? 'block' : 'none')}">
-      <div class="admin-section" v-if="userSettings.isCreator">
+      <div class="admin-section" v-if="props.userSettings.isCreator">
         <div class="text-section">
           <textarea rows="5" v-model="text"></textarea>
           <span
@@ -32,7 +32,7 @@
       <div class="canvas-text-action-back" @click="show(false)"></div>
     </div>
     <div id="canvas-text-action-card">
-      <div id="canvas-text-action-counter" v-if="userSettings.isCreator">
+      <div id="canvas-text-action-counter" v-if="props.userSettings.isCreator">
         <span
           v-if="isPlay"
           @click.prevent="pauseMessage"
@@ -44,150 +44,179 @@
       </div>
       <canvas id="canvas-text-scroll-section" height="250"/>
     </div>
+    <HelperItem
+      ref="helper"
+    />
   </div>
 </template>
 
-<script>
-import Config from "../../../configs/webRTCsocket";
-import webRTCHelper from "../../../utils/WebRTC/webRTCHelper";
+<script setup>
+import {defineExpose, defineProps, ref, computed, onMounted} from 'vue'
+import axios from '../../../utils/Webrtc/Axios'
+import HelperItem from '../../../utils/Webrtc/helper.vue'
 
-export default {
-  name: "CanvasTextAction",
-  props: ['room', 'webrtc', 'userSettings'],
-  mixins: [webRTCHelper],
-  created() {
-    this.getTextFromBucket();
+const apiClient = axios.getInstance()
+
+const props = defineProps({
+  webrtc: {
+    type: Object,
+    required: true
   },
-  computed: {
-    disabled() {
-      return (!this.text || this.text === '');
-    }
+  room: {
+    type: Object,
+    required: true
   },
-  data() {
-    return {
-      dialog: false,
-      loading: false,
-      text: null,
-      isPlay: false,
-      isPause: false,
-      historyItems: [],
-      files: [],
-      action: {
-        name: 'canvas-text',
-        moderator: true,
-        users: [],
-        attributes: {
-          play: false,
-          pause: false,
-          initial: false,
-          message: null,
-        }
-      }
-    }
-  },
-  methods: {
-    show(status = true) {
-      this.dialog = status;
-    },
-    run() {
-      this.show();
-    },
-    copyText(url) {
-      this.webrtcGetUserToken((token) => {
-        let headers = {
-          'user-token': token
-        };
-
-        axios.get(Config.webrtc_url + "/api/canvas-text-get?key=" + url, {
-          headers: headers
-        }).then(response => {
-          this.text = response.data;
-        });
-      });
-    },
-    getTextFromBucket() {
-      this.loading = true;
-
-      this.webrtcGetUserToken((token) => {
-        let headers = {
-          'user-token': token
-        };
-
-        // this.room.id
-        let roomId = '63413a3b5699a1f2c3549367';
-
-        axios.get(Config.webrtc_url + "/api/canvas-text-list?roomId=" + roomId, {
-          headers: headers
-        }).then(response => {
-          this.files = response.data.files.map(item => {
-            return {
-              file: item,
-              loading: false,
-            }
-          });
-        }).finally(() => {
-          this.loading = false;
-        });
-      });
-    },
-    getTextFromStorage() {
-      let store = JSON.parse(localStorage.getItem('cnidus.videoconference.canvasaction'));
-      this.historyItems = (!store) ? [] : store.history;
-    },
-    storeTextInStorage() {
-      localStorage.setItem('cnidus.videoconference.canvasaction', JSON.stringify({history: this.historyItems}));
-    },
-    removeText(index) {
-      this.historyItems.splice(index, 1);
-      this.storeTextInStorage();
-    },
-    getActionObject() {
-      return JSON.parse(JSON.stringify(this.action));
-    },
-    pauseMessage() {
-      if(!this.isPlay) {
-        return false;
-      }
-
-      this.isPause = !this.isPause;
-
-      let action = this.getActionObject();
-      action.attributes.play = true;
-      action.attributes.pause = this.isPause;
-
-      this.webrtc.runAction(this.room.id, action);
-      this.show(false);
-    },
-    marqueeMessage() {
-      if(this.disabled && !this.isPlay) {
-        return false;
-      }
-
-      this.isPlay = !this.isPlay;
-      this.isPause = false;
-
-      // store in storage
-      if (this.isPlay) {
-        let index = this.historyItems.findIndex(x => x === this.text);
-        if (index < 0) {
-          this.historyItems.push(this.text);
-          this.storeTextInStorage();
-        }
-      }
-
-      let action = this.getActionObject();
-      action.attributes.play = this.isPlay;
-      action.attributes.message = this.text;
-
-      if(this.isPlay) {
-        action.attributes.initial = true;
-      }
-
-      this.webrtc.runAction(this.room.id, action);
-      this.show(false);
-    },
+  userSettings: {
+    type: Object,
+    required: true
   }
+})
+
+const disabled = computed(() => {
+  return (!text.value || text.value === '')
+})
+
+const helper = ref()
+const dialog = ref(false)
+const loading = ref(false)
+const text = ref(null)
+const isPlay = ref(false)
+const isPause = ref(false)
+const historyItems = ref([])
+const files = ref([])
+
+const action = ref({
+  name: 'canvas-text',
+  moderator: true,
+  users: [],
+  attributes: {
+    play: false,
+    pause: false,
+    initial: false,
+    message: null,
+  }
+})
+
+const run = (room, data) => {
+  show()
 }
+
+const show = (status = true) => {
+  dialog.value = status;
+}
+
+const copyText = (url) => {
+  helper.value.webrtcGetUserToken((token) => {
+    let headers = {
+      'user-token': token
+    };
+
+    apiClient.get('/api/canvas-text-get?key=' + url, {
+      headers: headers
+    }).then(response => {
+      text.value = response.data
+    })
+  })
+}
+
+const getTextFromBucket = () => {
+  loading.value = true
+
+  helper.value.webrtcGetUserToken((token) => {
+    let headers = {
+      'user-token': token
+    }
+
+    let roomId = props.room.id
+
+    apiClient.get('/api/canvas-text-list?roomId=' + roomId, {
+      headers: headers
+    }).then(response => {
+      files.value = response.data.files.map(item => {
+        return {
+          file: item,
+          loading: false,
+        }
+      })
+    }).finally(() => {
+      loading.value = false;
+    })
+  })
+}
+
+const getTextFromStorage = () =>  {
+  let store = JSON.parse(localStorage.getItem('cnidus.videoconference.canvasaction'))
+  historyItems.value = (!store) ? [] : store.history;
+}
+
+const storeTextInStorage = () =>  {
+  localStorage.setItem('cnidus.videoconference.canvasaction', JSON.stringify({history: historyItems.value}))
+}
+
+const removeText = (index) =>  {
+  historyItems.value.splice(index, 1)
+  storeTextInStorage()
+}
+
+const getActionObject = () =>  {
+  return JSON.parse(JSON.stringify(action.value))
+}
+
+const pauseMessage = () =>  {
+  if(!isPlay.value) {
+    return false
+  }
+
+  isPause.value = !isPause.value
+
+  let actionItem = getActionObject()
+  actionItem.attributes.play = true
+  actionItem.attributes.pause = isPause.value
+
+  props.webrtc.runAction(props.room.id, actionItem)
+  show(false)
+}
+
+const marqueeMessage = () => {
+  if(disabled.value && !isPlay.value) {
+    return false
+  }
+
+  isPlay.value = !isPlay.value
+  isPause.value = false
+
+  // store in storage
+  if (isPlay.value) {
+    let index = historyItems.value.findIndex(x => x === text.value)
+    if (index < 0) {
+      historyItems.value.push(text.value)
+      storeTextInStorage()
+    }
+  }
+
+  let actionItem = getActionObject()
+  actionItem.attributes.play = isPlay.value
+  actionItem.attributes.message = text.value
+
+  if(isPlay.value) {
+    actionItem.attributes.initial = true;
+  }
+
+  props.webrtc.runAction(props.room.id, actionItem)
+  show(false)
+}
+
+onMounted(() => {
+  getTextFromBucket()
+})
+
+
+defineExpose({
+  run,
+  pauseMessage,
+  marqueeMessage,
+})
+
 </script>
 
 <style lang="scss">

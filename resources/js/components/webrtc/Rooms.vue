@@ -17,57 +17,55 @@
       {{ error }}
       <div>Please <a href="#" @click.prevent="getUserAccessToken">try again</a> later.</div>
     </div>
+    <HelperItem
+      ref="helper"
+    />
   </div>
 </template>
 
-<script>
-import RoomsList from "./RoomsList";
-import RoomCreate from "./RoomCreate";
-import webRTCHelper from "../../utils/WebRTC/webRTCHelper";
+<script setup>
+import {onBeforeUnmount, onMounted, ref} from 'vue'
+import RoomsList from './RoomsList'
+import RoomCreate from './RoomCreate'
+import HelperItem from '../../utils/Webrtc/helper.vue'
 
-export default {
-  name: "Rooms",
-  created() {
-    this.getUserAccessToken();
-  },
-  mixins: [webRTCHelper],
-  data() {
-    return {
-      token: null,
-      waitingDots: '.',
-      interval: null,
-      error: null,
-    }
-  },
-  methods: {
-    getUserAccessToken() {
-      this.error = null;
-      this.interval = setInterval(this.setWaitingDots, 500);
+const helper = ref()
 
-      this.webrtcGetUserToken((token) => {
-        this.token = token;
-      }, (error) => {
-        this.error = error;
-      }).finally(() => {
-        clearInterval(this.interval);
-      });
-    },
-    setWaitingDots() {
-      if(this.waitingDots.length < 3) {
-        this.waitingDots = this.waitingDots.concat('.');
-      } else {
-        this.waitingDots = '';
-      }
-    },
-  },
-  beforeDestroy() {
-    clearInterval(this.interval);
-  },
-  components: {
-    RoomCreate,
-    RoomsList,
-  },
+
+const token = ref()
+const waitingDots = ref('.')
+const interval = ref()
+const error = ref()
+
+const getUserAccessToken = () => {
+  error.value = null
+  interval.value = setInterval(setWaitingDots, 500)
+
+  helper.value.webrtcGetUserToken((userToken) => {
+    token.value = userToken
+  }, (errorItem) => {
+    error.value = errorItem
+  }).finally(() => {
+    clearInterval(interval.value)
+  })
 }
+
+const setWaitingDots = () => {
+  if(waitingDots.value.length < 3) {
+    waitingDots.value = waitingDots.value.concat('.')
+  } else {
+    waitingDots.value = ''
+  }
+}
+
+onBeforeUnmount(() => {
+  clearInterval(interval.value)
+})
+
+onMounted(() => {
+  getUserAccessToken()
+})
+
 </script>
 
 <style lang="scss">
