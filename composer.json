@@ -11,13 +11,6 @@
     ],
     "homepage": "https://github.com/codenidus/video-conference",
     "keywords": ["Laravel", "VideoConference"],
-    "require": {
-        
-    },
-    "require-dev": {
-        "phpunit/phpunit": "~9.0",
-        "orchestra/testbench": "~6"
-    },
     "autoload": {
         "psr-4": {
             "Codenidus\\VideoConference\\": "src/",
