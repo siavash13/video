@@ -8,7 +8,7 @@ export default {
   peer_secure: process.env.MIX_PEERJS_SECURE || false,
   peer_host: process.env.MIX_PEERJS_HOST || 'localhost',
   peer_port: process.env.MIX_PEERJS_PORT || '3003',
-  videoconference_theme: process.env.MIX_WEBRTC_THEME || 'Canvasface',
+  videoconference_theme: process.env.MIX_WEBRTC_THEME || 'default',
   mediapipe: {
     models: {
       'faceDetector': process.env.MIX_WEBRTC_BASE_URL + '/models/face',
