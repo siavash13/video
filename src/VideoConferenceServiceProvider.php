@@ -89,6 +89,7 @@ class VideoConferenceServiceProvider extends ServiceProvider
             __DIR__.'/../resources/js/utils/Webrtc/modules/Room.js' => resource_path('js/utils/Webrtc/modules/Room.js'),
             __DIR__.'/../resources/js/utils/Webrtc/modules/MediapipeBodySegment.js' => resource_path('js/utils/Webrtc/modules/MediapipeBodySegment.js'),
             __DIR__.'/../resources/js/utils/Webrtc/modules/MediapipeFaceDetect.js' => resource_path('js/utils/Webrtc/modules/MediapipeFaceDetect.js'),
+            __DIR__.'/../resources/js/utils/Webrtc/Axios.js' => resource_path('js/utils/Webrtc/Axios.js'),
             __DIR__.'/../resources/js/utils/Webrtc/PeerJs.js' => resource_path('js/utils/Webrtc/PeerJs.js'),
             __DIR__.'/../resources/js/utils/Webrtc/Socket.js' => resource_path('js/utils/Webrtc/Socket.js'),
             __DIR__.'/../resources/js/utils/Webrtc/WebRTC.js' => resource_path('js/utils/Webrtc/WebRTC.js'),

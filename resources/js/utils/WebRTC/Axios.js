@@ -1,8 +1,6 @@
 import axios from 'axios'
 import configs from '../../configs/webrtc'
 
-import store from '../../store'
-
 const apiClient = {}
 
 apiClient.getInstance = (baseUrl = configs.webrtc_url, customConfigs = {}) => {
@@ -17,18 +15,13 @@ apiClient.getInstance = (baseUrl = configs.webrtc_url, customConfigs = {}) => {
   }, customConfigs))
 
   client.interceptors.request.use(async (request) => {
-    const isLoggedIn = store.getters["user/isLoggedIn"];
-
-    if (isLoggedIn) {
-      request.headers.common.Authorization = `Bearer ${store.getters["user/getToken"]}`;
-    }
-
+    // modify request before send
     return request
   })
 
   client.defaults.validateStatus = (status) => {
     // validate response status
-    return true
+    return status >= 200 && status < 300;
   }
 
   return client
