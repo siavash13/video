@@ -12,11 +12,6 @@ class ProcessCommand extends Command
 
     public function handle()
     {
-        $version = $this->choice(
-            'Which vue version would you like to use?',
-            ['Vue2', 'Vue3']
-        );
-
         $this->publishConfigFile();
         $this->publishMiddlewareFile();
         $this->publishVueAssets();
