@@ -51,6 +51,7 @@ module.exports = () => {
       mediaConnection.on('stream', peerVideoStream => {
         this.parent.Media.streamVideo(mediaConnection.peer, peerVideoStream);
         this.parent.Media.streamAudio(mediaConnection.peer, peerVideoStream);
+        this.connections[(count - 1)].stream = peerVideoStream;
         this.connections[(count - 1)].active = true;
       });
 
@@ -67,6 +68,9 @@ module.exports = () => {
       this.connections[index].mediaConnection.close();
       this.connections[index].dataConnection.close();
       this.connections.splice(index, 1);
+
+      // reset video and audio stream
+      setTimeout(this.parent.Media.resetConnectionsStream, 10);
     }
   }
 

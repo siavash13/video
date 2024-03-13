@@ -127,7 +127,7 @@ class Webrtc
     await this.People.add(mediaConnection, dataConnection, data);
 
     mediaConnection.on('close', () => {
-      console.log('Close user...' + mediaConnection.peer);
+      console.log('Close user...' + data.peerJsId);
     });
     mediaConnection.on('error', (error) => {
       console.log('error user... ' + error);
@@ -169,6 +169,10 @@ class Webrtc
     name = name.replace(/-[a-z]/g, m => m.slice(1).toUpperCase());
 
     return name;
+  }
+
+  isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   }
 
 }

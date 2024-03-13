@@ -101,6 +101,7 @@ const connections = ref([])
 const waitingList = ref([])
 const userSettings = ref({
   isCreator: false,
+  isBrowserWindowActive: true,
 })
 const theme = ref(configs.webrtc.videoconference_theme)
 const themeReady = ref(false)
@@ -165,6 +166,7 @@ const initialize = async (roomItem = null, tokenItem = null) => {
         localVideoRef: 'video-item',
         remoteVideoRef: 'remote-video',
         remoteAudioRef: 'remote-audio',
+        resolution: props.devices.resolution
       },
       callback: {
         joinRoom: userJoinRoom,
@@ -305,15 +307,38 @@ const eventHandlerWaitUntilHostAdmit = () => {
   emit('onSetWaitingStatus', true)
 }
 
+/**
+ * Fix mobile device browser minimize stream bug
+ */
+const checkBrowserWindowVisibility = (e) => {
+  if (document.visibilityState === 'hidden') {
+    webrtc.Media.sendUserMediaMuteStatusByDataConnection(true, true)
+  } else {
+    webrtc.Media.sendUserMediaMuteStatusByDataConnection(
+      userSettings.value.camDisable,
+      userSettings.value.micDisable
+    )
+  }
+}
+
 onBeforeUnmount(() => {
   leftTheRoom()
   window.removeEventListener('onWaitUntilAdmit', eventHandlerWaitUntilHostAdmit)
   window.removeEventListener('onConnectToRoomSuccess', eventHandlerConnectToRoomSuccess)
+
+  if (webrtc.isMobileDevice()) {
+    window.removeEventListener('visibilitychange', checkBrowserWindowVisibility)
+  }
 })
 
 setThemeLayout()
 window.addEventListener('onWaitUntilAdmit', eventHandlerWaitUntilHostAdmit)
 window.addEventListener('onConnectToRoomSuccess', eventHandlerConnectToRoomSuccess)
+
+if (webrtc.isMobileDevice()) {
+  window.addEventListener('visibilitychange', checkBrowserWindowVisibility)
+}
+
 
 defineExpose({
   initialize

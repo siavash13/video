@@ -64,6 +64,14 @@
                       d="m9.486 10.607-.748-.748A2 2 0 0 1 6 8v-.878l-1-1V8a3 3 0 0 0 4.486 2.607zm-7.84-9.253 12 12 .708-.708-12-12-.708.708z"/>
                 </svg>
               </button>
+              <select
+                v-model="resolution"
+                >
+                <option value="qvga" selected>QVGA</option>
+                <option value="vga">VGA</option>
+                <option value="hd">HD</option>
+                <option value="fhd">Full HD</option>
+              </select>
             </div>
             <div class="devices">
               <div>
@@ -154,7 +162,8 @@
           :devices="{
             camera: cameraDevice,
             microphone: microphoneDevice,
-            speaker: speakerDevice
+            speaker: speakerDevice,
+            resolution: resolution
           }"
           :camDisable="camDisable"
           :micDisable="micDisable"
@@ -195,6 +204,7 @@ const microphoneDevice = ref()
 const speakerDevice = ref()
 const camDisable = ref(false)
 const micDisable = ref(false)
+const resolution = ref('qvga')
 const loading = ref(false)
 const waiting = ref(false)
 const startConnecting = ref(false)
@@ -252,7 +262,6 @@ watch(speakers, (value) => {
   }
 })
 
-
 const getUserAccessToken = () => {
   helper.value.webrtcGetUserToken((userToken) => {
     token.value = userToken
@@ -298,9 +307,9 @@ const checkPermissions = async (permission) => {
 }
 
 const grantPermissions = async () => {
-  if (!permissionsFailed.value.camera && !permissionsFailed.value.microphone) {
-    return
-  }
+  // if (!permissionsFailed.value.camera && !permissionsFailed.value.microphone) {
+  //   return
+  // }
 
   permissionsRequest.value = true
 
@@ -337,8 +346,8 @@ onMounted(async () => {
   devices.value = await webrtc.getDevices()
 
   getUserAccessToken()
-  await checkPermissions('camera')
-  await checkPermissions('microphone')
+  //await checkPermissions('camera')
+  //await checkPermissions('microphone')
   await grantPermissions()
 })
 

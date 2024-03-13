@@ -9,22 +9,6 @@ const errors = [
   { name: ['TypeError'], message: 'empty constraints object' },
 ];
 
-const createEmptyMediaStream = () => {
-  return new MediaStream([
-    createEmptyAudioTrack(),
-    createEmptyVideoTrack({ width:640, height:480 })
-  ])
-}
-
-const createEmptyAudioTrack = () => {
-  const ctx = new AudioContext();
-  const oscillator = ctx.createOscillator();
-  const dst = oscillator.connect(ctx.createMediaStreamDestination());
-  oscillator.start();
-  const track = dst.stream.getAudioTracks()[0];
-  return Object.assign(track, { enabled: false });
-}
-
 const createEmptyVideoTrack = ({ width, height }) => {
   const canvas = Object.assign(document.createElement('canvas'), { width, height });
   canvas.getContext('2d').fillRect(0, 0, width, height);
@@ -55,6 +39,25 @@ const flipVideoImage = async (canvas) => {
   ctx.restore();
 }
 
+const resolution = {
+  qvga: {
+    width: '320',
+    height: '240'
+  },
+  vga: {
+    width: '640',
+    height: '480',
+  },
+  hd: {
+    width: '1280',
+    height: '720'
+  },
+  fhd: {
+    width: '1920',
+    height: '1080'
+  }
+}
+
 module.exports = () => {
 
   const Media = {
@@ -81,10 +84,16 @@ module.exports = () => {
     this.canvas = document.createElement('canvas');
     this.video = document.createElement('video');
 
-    this.canvas.width = "640";
-    this.canvas.height = "480";
-    this.video.width = "640";
-    this.video.height = "480";
+    // set camera resolution size
+    this.options.minVideoWidth = resolution[this.options.resolution].width;
+    this.options.minVideoHeight = resolution[this.options.resolution].height;
+    this.options.maxVideoWidth = resolution[this.options.resolution].width;
+    this.options.maxVideoHeight = resolution[this.options.resolution].height;
+
+    this.canvas.width = this.options.minVideoWidth;
+    this.canvas.height = this.options.minVideoHeight;
+    this.video.width = this.options.minVideoWidth;
+    this.video.height = this.options.minVideoHeight;
 
     this.bodySegmenter = {
       segmenter: null,
@@ -117,19 +126,22 @@ module.exports = () => {
       let videoParams = (muteVideo)? false : {
         deviceId: {
           exact: devices.camera,
+        },
+        width: {
+          min: this.options.minVideoWidth,
+          max: this.options.maxVideoWidth
+        },
+        height: {
+          min: this.options.minVideoHeight,
+          max: this.options.maxVideoHeight
         }
       };
 
-      let audioParams = (muteAudio)? false : {
+      let audioParams = {
         deviceId: {
           exact: devices.microphone
         }
       };
-
-      if (!videoParams && !audioParams) {
-        Media.userMedia = createEmptyMediaStream();
-        resolve(Media.userMedia);
-      }
 
       navigator.mediaDevices.getUserMedia({
         video: videoParams,
@@ -142,25 +154,22 @@ module.exports = () => {
           media.addTrack(createEmptyVideoTrack({ width:640, height:480 }));
         }
 
-        if (this.parent.userSettings.micDisable) {
-          media.addTrack(createEmptyAudioTrack());
-        }
-
         this.video.srcObject = media;
         this.video.muted = true;
         this.video.play();
 
         const audioTrack = media.getAudioTracks()[0];
 
-        this.video.addEventListener('loadeddata', () => {
-          this.process = false;
-          this.interval = setInterval(Media.processOnMedia, 1000 / this.parent.configs.mediapipe.fps);
-        });
+        this.video.addEventListener('loadeddata', Media.setInterval);
 
         const processedMedia = this.canvas.captureStream();
         processedMedia.addTrack(audioTrack);
 
         Media.userMedia = processedMedia;
+
+        if (muteAudio) {
+          Media.muteMicrophone();
+        }
 
         resolve(processedMedia);
         }).catch(error => {
@@ -178,6 +187,13 @@ module.exports = () => {
           reject(message || error.name);
         });
     });
+  }
+
+  Media.setInterval = () => {
+    if (!this.parent.userSettings.camDisable) {
+      this.process = false;
+      this.interval = setInterval(Media.processOnMedia, 1000 / this.parent.configs.mediapipe.fps);
+    }
   }
 
   Media.processOnMedia = async () => {
@@ -238,8 +254,6 @@ module.exports = () => {
    * Release User Media
    */
   Media.release = () => {
-    let videoRef = document.getElementById(this.options.localVideoRef);
-
     const stopTracks = (item) => {
       const stream = item.srcObject;
       const tracks = stream.getTracks();
@@ -249,15 +263,24 @@ module.exports = () => {
       });
     }
 
-    if (videoRef) {
-      stopTracks(videoRef);
-    }
-
     stopTracks(this.video);
-
     clearInterval(this.interval);
 
+    this.video.removeEventListener('loadeddata', Media.setInterval);
+
     Media.userMedia = null;
+  }
+
+  /**
+   * Reset all connections media
+   */
+  Media.resetConnectionsStream = () => {
+    const connections = this.parent.People.getConnections();
+
+    connections.forEach(connection => {
+      Media.streamVideo(connection.peerJsId, connection.stream);
+      Media.streamAudio(connection.peerJsId, connection.stream);
+    });
   }
 
   /**
@@ -271,7 +294,7 @@ module.exports = () => {
     video.srcObject = media;
     video.addEventListener('loadedmetadata', () => {
       video.play();
-    });
+    }, { once: true });
 
     video.addEventListener('play', () => {
       if(!this.events.play && this.events.play.length > 0) {
@@ -280,7 +303,7 @@ module.exports = () => {
           item.handler(video);
         });
       }
-    });
+    }, { once: true });
   }
 
   /**
@@ -315,14 +338,6 @@ module.exports = () => {
    */
   Media.muteCamera = () => {
     Media.terminateConnectionsVideoAudioMedia('video');
-    /*
-    if (this.parent.userSettings.camDisable) {
-      Media.terminateConnectionsVideoAudioMedia('video');
-    } else {
-      Media.restartMedia();
-    }
-
-     */
   }
 
   /**
@@ -330,34 +345,6 @@ module.exports = () => {
    */
   Media.muteMicrophone = () => {
     Media.terminateConnectionsVideoAudioMedia('audio');
-    /*
-    if (this.parent.userSettings.micDisable) {
-      Media.terminateConnectionsVideoAudioMedia('audio');
-    } else {
-      Media.restartMedia();
-    }
-
-     */
-  }
-
-  /**
-   * Grab new browser media by user settings
-   */
-  Media.restartMedia = () => {
-    let currentMedia = Media.userMedia;
-
-    Media.grab(
-      Media.devices,
-      this.parent.userSettings.camDisable,
-      this.parent.userSettings.micDisable
-    ).then((media) => {
-      currentMedia.getTracks().forEach(track => {
-        track.stop();
-      });
-
-      Media.streamVideo(null, Media.userMedia);
-      Media.resetConnectionsVideoAudioMedia(media);
-    });
   }
 
   /**
@@ -368,32 +355,37 @@ module.exports = () => {
 
     connections.forEach(connection => {
       let senders = connection.mediaConnection.peerConnection.getSenders();
+      let camIndex = senders.findIndex(x => x.track && x.track.kind === 'video');
+      let micIndex = senders.findIndex(x => x.track && x.track.kind === 'audio');
 
-      if (!this.parent.userSettings.camDisable) {
-        let camIndex = senders.findIndex(x => x.track && x.track.kind === 'video');
-
-        if (camIndex > -1) {
-          senders[camIndex].replaceTrack(media.getVideoTracks()[0]);
-        } else {
-          connection.mediaConnection.peerConnection.addTrack(media.getVideoTracks()[0]);
-        }
+      if (camIndex > -1) {
+        senders[camIndex].replaceTrack(media.getVideoTracks()[0]);
+      } else {
+        connection.mediaConnection.peerConnection.addTrack(media.getVideoTracks()[0]);
       }
 
-      if (!this.parent.userSettings.micDisable) {
-        let micIndex = senders.findIndex(x => x.track && x.track.kind === 'audio');
-
-        if (micIndex > -1) {
-          senders[micIndex].replaceTrack(media.getAudioTracks()[0]);
-        } else {
-          connection.mediaConnection.peerConnection.addTrack(media.getAudioTracks()[0]);
-        }
+      if (micIndex > -1) {
+        senders[micIndex].replaceTrack(media.getAudioTracks()[0]);
+      } else {
+        connection.mediaConnection.peerConnection.addTrack(media.getAudioTracks()[0]);
       }
-
 
       connection.dataConnection.send({
         event: 'muteMedia',
         camMute: this.parent.userSettings.camDisable,
         micMute: this.parent.userSettings.micDisable
+      });
+    });
+  }
+
+  Media.sendUserMediaMuteStatusByDataConnection = (videoStatus, audioStatus) => {
+    let connections = this.parent.People.getConnections();
+
+    connections.forEach(connection => {
+      connection.dataConnection.send({
+        event: 'muteMedia',
+        camMute: videoStatus,
+        micMute: audioStatus
       });
     });
   }
@@ -404,23 +396,27 @@ module.exports = () => {
   Media.terminateConnectionsVideoAudioMedia = (type = 'video') => {
     let connections = this.parent.People.getConnections();
 
-    // re-grab user media by new settings
-    Media.release()
-    Media.grab(
-      Media.devices,
-      this.parent.userSettings.camDisable,
-      this.parent.userSettings.micDisable
-    ).then(media => {
-      Media.streamVideo(null, media);
-    })
-
-/*
-    Media.userMedia.getTracks().forEach(track => {
-      if (track.kind === type) {
+    if (type === 'video' && !this.parent.userSettings.camDisable) {
+      Media.release()
+      Media.grab(
+        Media.devices,
+        this.parent.userSettings.camDisable,
+        this.parent.userSettings.micDisable
+      ).then(media => {
+        Media.streamVideo(null, media);
+        Media.resetConnectionsVideoAudioMedia(media);
+      })
+    } else if (type === 'video') {
+      this.video.srcObject.getVideoTracks().forEach(track => {
         track.stop();
-      }
-    });
-*/
+      });
+      clearInterval(this.interval);
+    } else {
+      this.video.srcObject.getAudioTracks().forEach(track => {
+        track.enabled = !this.parent.userSettings.micDisable;
+      })
+    }
+
     connections.forEach(connection => {
       connection.dataConnection.send({
         event: 'muteMedia',
@@ -439,6 +435,14 @@ module.exports = () => {
       connection.micMute = data.micMute;
       Media.streamVideo(data.peerJsId, connection.mediaConnection.remoteStream);
       Media.streamAudio(data.peerJsId, connection.mediaConnection.remoteStream);
+
+      if(connection.camMute) {
+        connection.camCover = true;
+      } else {
+        setTimeout(() => {
+          connection.camCover = false;
+        }, 500)
+      }
     }
   }
 
